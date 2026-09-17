@@ -17,6 +17,7 @@ migrate_working_dir/
 **/dist/
 **/.env
 **/.env.*
+spendhike_backend/
 
 # IntelliJ related
 *.iml
