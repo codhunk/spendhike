@@ -1155,7 +1155,8 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
     final contractorCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
     String type = 'Carigar';
-    String? siteId = _selectedSiteId;
+    String? siteId = _selectedSiteId ?? (_sites.isNotEmpty ? _sites.first.id : null);
+    bool isSaving = false;
 
     showDialog(
       context: context,
@@ -1190,12 +1191,13 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                   const SizedBox(height: 12),
                   TextField(controller: rateCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Dihadi Rate (₹) *')),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: siteId,
-                    decoration: const InputDecoration(labelText: 'Site/Project *'),
-                    items: _sites.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
-                    onChanged: (val) => setModalState(() => siteId = val),
-                  ),
+                  if (_sites.isNotEmpty)
+                    DropdownButtonFormField<String>(
+                      value: siteId ?? _sites.first.id,
+                      decoration: const InputDecoration(labelText: 'Site/Project'),
+                      items: _sites.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
+                      onChanged: (val) => setModalState(() => siteId = val),
+                    ),
                   const SizedBox(height: 12),
                   TextField(controller: contractorCtrl, decoration: const InputDecoration(labelText: 'Contractor/Supervisor')),
                   const SizedBox(height: 12),
@@ -1206,26 +1208,52 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
             actions: [
               TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
               ElevatedButton(
-                onPressed: () async {
-                  if (nameCtrl.text.trim().isEmpty || siteId == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill required fields')));
-                    return;
-                  }
-                  final res = await ApiService.createLabour({
-                    'name': nameCtrl.text.trim(),
-                    'mobileNumber': mobileCtrl.text.trim(),
-                    'labourType': type,
-                    'dihadiRate': double.tryParse(rateCtrl.text) ?? 800,
-                    'siteId': siteId,
-                    'contractor': contractorCtrl.text.trim(),
-                    'notes': notesCtrl.text.trim(),
-                  });
-                  if (ctx.mounted) Navigator.pop(ctx);
-                  if (res['success'] == true) {
-                    _refreshAllTabs();
-                  }
-                },
-                child: const Text('Save Labour'),
+                onPressed: isSaving
+                    ? null
+                    : () async {
+                        if (nameCtrl.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter labour full name'), backgroundColor: Colors.red),
+                          );
+                          return;
+                        }
+
+                        setModalState(() => isSaving = true);
+
+                        final res = await ApiService.createLabour({
+                          'name': nameCtrl.text.trim(),
+                          'mobileNumber': mobileCtrl.text.trim(),
+                          'labourType': type,
+                          'dihadiRate': double.tryParse(rateCtrl.text) ?? (type == 'Helper' ? 600 : 800),
+                          'siteId': siteId ?? (_sites.isNotEmpty ? _sites.first.id : null),
+                          'contractor': contractorCtrl.text.trim(),
+                          'notes': notesCtrl.text.trim(),
+                        });
+
+                        if (!context.mounted) return;
+
+                        if (res['success'] == true) {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(res['message'] ?? 'Labour added successfully!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                          _loadInitialData();
+                        } else {
+                          setModalState(() => isSaving = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(res['message'] ?? 'Failed to save labour'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                child: isSaving
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Save Labour'),
               ),
             ],
           );
@@ -1240,6 +1268,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
     String? selectedLabourId = _labours.isNotEmpty ? _labours.first['_id'].toString() : null;
     String pmtType = 'Wage Payment';
     String pmtMethod = 'Cash';
+    bool isSaving = false;
 
     showDialog(
       context: context,
@@ -1291,22 +1320,52 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
             actions: [
               TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
               ElevatedButton(
-                onPressed: () async {
-                  if (selectedLabourId == null || amountCtrl.text.trim().isEmpty) return;
-                  final res = await ApiService.recordLabourPayment({
-                    'labourId': selectedLabourId,
-                    'siteId': _selectedSiteId,
-                    'amount': double.tryParse(amountCtrl.text) ?? 0,
-                    'paymentType': pmtType,
-                    'paymentMethod': pmtMethod,
-                    'notes': notesCtrl.text.trim(),
-                  });
-                  if (ctx.mounted) Navigator.pop(ctx);
-                  if (res['success'] == true) {
-                    _refreshAllTabs();
-                  }
-                },
-                child: const Text('Record Payment'),
+                onPressed: isSaving
+                    ? null
+                    : () async {
+                        if (selectedLabourId == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please select a labourer'), backgroundColor: Colors.red),
+                          );
+                          return;
+                        }
+                        final amt = double.tryParse(amountCtrl.text) ?? 0;
+                        if (amt <= 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter a valid amount'), backgroundColor: Colors.red),
+                          );
+                          return;
+                        }
+
+                        setModalState(() => isSaving = true);
+
+                        final res = await ApiService.recordLabourPayment({
+                          'labourId': selectedLabourId,
+                          'siteId': _selectedSiteId ?? (_sites.isNotEmpty ? _sites.first.id : null),
+                          'amount': amt,
+                          'paymentType': pmtType,
+                          'paymentMethod': pmtMethod,
+                          'notes': notesCtrl.text.trim(),
+                        });
+
+                        if (!context.mounted) return;
+
+                        if (res['success'] == true) {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res['message'] ?? 'Payment recorded successfully!'), backgroundColor: Colors.green),
+                          );
+                          _refreshAllTabs();
+                        } else {
+                          setModalState(() => isSaving = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res['message'] ?? 'Failed to record payment'), backgroundColor: Colors.red),
+                          );
+                        }
+                      },
+                child: isSaving
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Record Payment'),
               ),
             ],
           );
@@ -1320,6 +1379,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
     final descCtrl = TextEditingController();
     String category = 'Food';
     String pmtMethod = 'Cash';
+    bool isSaving = false;
 
     showDialog(
       context: context,
@@ -1367,21 +1427,45 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
             actions: [
               TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
               ElevatedButton(
-                onPressed: () async {
-                  if (_selectedSiteId == null || amountCtrl.text.trim().isEmpty) return;
-                  final res = await ApiService.recordLabourExpense({
-                    'siteId': _selectedSiteId,
-                    'category': category,
-                    'amount': double.tryParse(amountCtrl.text) ?? 0,
-                    'paymentMethod': pmtMethod,
-                    'description': descCtrl.text.trim(),
-                  });
-                  if (ctx.mounted) Navigator.pop(ctx);
-                  if (res['success'] == true) {
-                    _refreshAllTabs();
-                  }
-                },
-                child: const Text('Save Kharcha'),
+                onPressed: isSaving
+                    ? null
+                    : () async {
+                        final amt = double.tryParse(amountCtrl.text) ?? 0;
+                        if (amt <= 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter a valid amount'), backgroundColor: Colors.red),
+                          );
+                          return;
+                        }
+
+                        setModalState(() => isSaving = true);
+
+                        final res = await ApiService.recordLabourExpense({
+                          'siteId': _selectedSiteId ?? (_sites.isNotEmpty ? _sites.first.id : null),
+                          'category': category,
+                          'amount': amt,
+                          'paymentMethod': pmtMethod,
+                          'description': descCtrl.text.trim(),
+                        });
+
+                        if (!context.mounted) return;
+
+                        if (res['success'] == true) {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res['message'] ?? 'Site kharcha saved successfully!'), backgroundColor: Colors.green),
+                          );
+                          _refreshAllTabs();
+                        } else {
+                          setModalState(() => isSaving = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res['message'] ?? 'Failed to save site kharcha'), backgroundColor: Colors.red),
+                          );
+                        }
+                      },
+                child: isSaving
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Save Kharcha'),
               ),
             ],
           );
