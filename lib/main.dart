@@ -11,6 +11,10 @@ import 'services/api_service.dart';
 import 'services/app_settings.dart';
 
 
+import 'services/passcode_service.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ApiService.initSession();
@@ -30,96 +34,140 @@ class MyApp extends StatelessWidget {
         final lightTextTheme = ThemeData.light().textTheme;
         final darkTextTheme = ThemeData.dark().textTheme;
 
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'SpendHike',
-          themeMode: AppSettings.instance.themeMode,
-          theme: ThemeData(
-            useMaterial3: true,
-            brightness: Brightness.light,
-            textTheme: GoogleFonts.poppinsTextTheme(lightTextTheme),
-            scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-            cardColor: Colors.white,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF0453CD),
+        return AppLifecycleLockObserver(
+          child: MaterialApp(
+            navigatorKey: navigatorKey,
+            debugShowCheckedModeBanner: false,
+            title: 'SpendHike',
+            themeMode: AppSettings.instance.themeMode,
+            theme: ThemeData(
+              useMaterial3: true,
               brightness: Brightness.light,
-              surface: Colors.white,
-              primary: const Color(0xFF0453CD),
-            ),
-            appBarTheme: AppBarTheme(
-              backgroundColor: const Color(0xFFF8FAFC),
-              foregroundColor: const Color(0xFF0F172A),
-              elevation: 0,
-              titleTextStyle: GoogleFonts.poppins(
-                color: const Color(0xFF0F172A),
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+              textTheme: GoogleFonts.poppinsTextTheme(lightTextTheme),
+              scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+              cardColor: Colors.white,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(0xFF0453CD),
+                brightness: Brightness.light,
+                surface: Colors.white,
+                primary: const Color(0xFF0453CD),
+              ),
+              appBarTheme: AppBarTheme(
+                backgroundColor: const Color(0xFFF8FAFC),
+                foregroundColor: const Color(0xFF0F172A),
+                elevation: 0,
+                titleTextStyle: GoogleFonts.poppins(
+                  color: const Color(0xFF0F172A),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              cardTheme: CardThemeData(
+                color: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+              ),
+              dialogTheme: DialogThemeData(
+                backgroundColor: Colors.white,
+                surfaceTintColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
             ),
-            cardTheme: CardThemeData(
-              color: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-            ),
-            dialogTheme: DialogThemeData(
-              backgroundColor: Colors.white,
-              surfaceTintColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            ),
-          ),
-          darkTheme: ThemeData(
-            useMaterial3: true,
-            brightness: Brightness.dark,
-            textTheme: GoogleFonts.poppinsTextTheme(darkTextTheme),
-            scaffoldBackgroundColor: const Color(0xFF0F172A), // Slate Light-Dark
-            cardColor: const Color(0xFF1E293B),
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF3B82F6),
+            darkTheme: ThemeData(
+              useMaterial3: true,
               brightness: Brightness.dark,
-              surface: const Color(0xFF1E293B),
-              primary: const Color(0xFF3B82F6),
-              onSurface: const Color(0xFFF8FAFC),
-            ),
-            appBarTheme: AppBarTheme(
-              backgroundColor: const Color(0xFF0F172A),
-              foregroundColor: const Color(0xFFF8FAFC),
-              elevation: 0,
-              titleTextStyle: GoogleFonts.poppins(
-                color: const Color(0xFFF8FAFC),
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+              textTheme: GoogleFonts.poppinsTextTheme(darkTextTheme),
+              scaffoldBackgroundColor: const Color(0xFF0F172A), // Slate Light-Dark
+              cardColor: const Color(0xFF1E293B),
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(0xFF3B82F6),
+                brightness: Brightness.dark,
+                surface: const Color(0xFF1E293B),
+                primary: const Color(0xFF3B82F6),
+                onSurface: const Color(0xFFF8FAFC),
+              ),
+              appBarTheme: AppBarTheme(
+                backgroundColor: const Color(0xFF0F172A),
+                foregroundColor: const Color(0xFFF8FAFC),
+                elevation: 0,
+                titleTextStyle: GoogleFonts.poppins(
+                  color: const Color(0xFFF8FAFC),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              cardTheme: CardThemeData(
+                color: const Color(0xFF1E293B),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Color(0xFF334155)),
+                ),
+              ),
+              dialogTheme: DialogThemeData(
+                backgroundColor: const Color(0xFF1E293B),
+                surfaceTintColor: const Color(0xFF1E293B),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
             ),
-            cardTheme: CardThemeData(
-              color: const Color(0xFF1E293B),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: Color(0xFF334155)),
-              ),
-            ),
-            dialogTheme: DialogThemeData(
-              backgroundColor: const Color(0xFF1E293B),
-              surfaceTintColor: const Color(0xFF1E293B),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            ),
+            initialRoute: hasActiveSession ? '/main' : '/',
+            routes: {
+              '/': (context) => const SplashScreen(),
+              '/login': (context) => const LoginScreen(),
+              '/signup': (context) => const SignupScreen(),
+              '/main': (context) => const MainNavigation(),
+              '/create-passcode': (context) => const CreatePasscodeScreen(),
+              '/lock-passcode': (context) => const PasscodeLockScreen(),
+              '/change-passcode': (context) => const ChangePasscodeScreen(),
+            },
           ),
-          initialRoute: hasActiveSession ? '/main' : '/',
-          routes: {
-            '/': (context) => const SplashScreen(),
-            '/login': (context) => const LoginScreen(),
-            '/signup': (context) => const SignupScreen(),
-            '/main': (context) => const MainNavigation(),
-            '/create-passcode': (context) => const CreatePasscodeScreen(),
-            '/lock-passcode': (context) => const PasscodeLockScreen(),
-            '/change-passcode': (context) => const ChangePasscodeScreen(),
-          },
         );
       },
     );
   }
 }
+
+class AppLifecycleLockObserver extends StatefulWidget {
+  final Widget child;
+  const AppLifecycleLockObserver({super.key, required this.child});
+
+  @override
+  State<AppLifecycleLockObserver> createState() => _AppLifecycleLockObserverState();
+}
+
+class _AppLifecycleLockObserverState extends State<AppLifecycleLockObserver>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      PasscodeService.recordAppPaused();
+    } else if (state == AppLifecycleState.resumed) {
+      final shouldLock = await PasscodeService.shouldLockOnResume();
+      if (shouldLock && ApiService.authToken != null && ApiService.authToken!.isNotEmpty) {
+        navigatorKey.currentState?.pushNamedAndRemoveUntil('/lock-passcode', (route) => false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
+  }
+}
+
 

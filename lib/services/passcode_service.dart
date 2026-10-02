@@ -136,8 +136,30 @@ class PasscodeService {
       await _storage.delete(key: _keyPasscode);
       await _storage.delete(key: _keyPasscodeEnabled);
       await _storage.delete(key: _keyPasscodeLength);
+      _pausedTime = null;
     } catch (e) {
       debugPrint('[PasscodeService] Error clearing passcode: $e');
     }
   }
+
+  // ─── APP BACKGROUND AUTO-LOCK TRACKING ────────────────────────────────────
+  static DateTime? _pausedTime;
+
+  /// Record timestamp when app enters background / paused state
+  static void recordAppPaused() {
+    _pausedTime = DateTime.now();
+  }
+
+  /// Check if app should trigger Passcode Lock on app resume (default 10 seconds of background inactivity)
+  static Future<bool> shouldLockOnResume({int autoLockThresholdSeconds = 10}) async {
+    if (_pausedTime == null) return false;
+    final elapsed = DateTime.now().difference(_pausedTime!).inSeconds;
+    _pausedTime = null;
+
+    if (elapsed >= autoLockThresholdSeconds) {
+      return await isPasscodeConfigured();
+    }
+    return false;
+  }
 }
+

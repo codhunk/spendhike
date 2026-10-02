@@ -6,9 +6,11 @@ import '../models/app_models.dart';
 import 'data_sync_notifier.dart';
 import 'session_manager.dart';
 import 'passcode_service.dart';
+import '../main.dart';
 
 /// Central Live API Service handling HTTP REST communication with SpendHike Node.js/MongoDB Backend.
 class ApiService {
+
 
   // ─── BASE URL RESOLUTION ───────────────────────────────────────────────────
   static String _customBaseUrl = '';
@@ -347,6 +349,9 @@ class ApiService {
   }
 
   static Map<String, dynamic> _parseJsonResponse(http.Response response) {
+    if (response.statusCode == 401) {
+      _handleTokenExpired();
+    }
     try {
       if (response.body.isNotEmpty) {
         final decoded = jsonDecode(response.body);
@@ -360,6 +365,15 @@ class ApiService {
       'message': 'Server returned unexpected response (${response.statusCode})',
     };
   }
+
+  static void _handleTokenExpired() async {
+    if (_authToken != null) {
+      debugPrint('[ApiService] 401 Unauthorized / Token Expired detected. Redirecting to login.');
+      await logout();
+      navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
+    }
+  }
+
 
   static Future<Map<String, dynamic>> setPasscode(String passcode) async {
     final activeUrl = await getActiveBaseUrl();
