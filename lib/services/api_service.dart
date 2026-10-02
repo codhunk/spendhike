@@ -20,9 +20,6 @@ class ApiService {
   }
 
   static const Duration _timeoutDuration = Duration(seconds: 30);
-  static bool _isResolvingUrl = false;
-
-  static List<String> get _candidateUrls => ApiConfig.candidateUrls;
 
   static Future<String> getActiveBaseUrl() async {
     if (_customBaseUrl.isNotEmpty) {
@@ -313,9 +310,29 @@ class ApiService {
         }
       }
     } catch (_) {}
+
+    String? extractedHtmlMsg;
+    if (response.body.contains('<pre>') && response.body.contains('</pre>')) {
+      final match = RegExp(r'<pre>(.*?)</pre>', dotAll: true).firstMatch(response.body);
+      if (match != null && match.group(1) != null) {
+        extractedHtmlMsg = match.group(1)!.trim();
+      }
+    }
+
+    String fallbackMsg = extractedHtmlMsg ?? 'Server returned unexpected response (${response.statusCode})';
+    if (response.statusCode == 502 || response.statusCode == 503 || response.statusCode == 504) {
+      fallbackMsg = 'Server is starting up or temporarily busy (${response.statusCode}). Please wait a moment and try again.';
+    } else if (response.statusCode == 404) {
+      fallbackMsg = extractedHtmlMsg != null ? 'API Endpoint error: $extractedHtmlMsg' : 'API Endpoint not found (${response.statusCode}).';
+    } else if (response.statusCode == 400) {
+      fallbackMsg = extractedHtmlMsg ?? 'Bad Request (${response.statusCode}). Please check your input parameters.';
+    } else if (response.statusCode == 500) {
+      fallbackMsg = extractedHtmlMsg ?? 'Internal Server Error (${response.statusCode}). Please try again later.';
+    }
+
     return {
       'success': false,
-      'message': 'Server returned unexpected response (${response.statusCode})',
+      'message': fallbackMsg,
     };
   }
 
@@ -1013,37 +1030,52 @@ class ApiService {
   static Future<Map<String, dynamic>> createLabour(Map<String, dynamic> payload) async {
     final activeUrl = await getActiveBaseUrl();
     final cleanUrl = activeUrl.endsWith('/') ? activeUrl.substring(0, activeUrl.length - 1) : activeUrl;
-    try {
-      final response = await http
-          .post(Uri.parse('$cleanUrl/labours'), headers: _headers, body: jsonEncode(payload))
-          .timeout(_timeoutDuration);
+    final candidateEndpoints = <String>[
+      '$cleanUrl/labours',
+      '$cleanUrl/labour',
+      if (!cleanUrl.contains('/api/v1')) '$cleanUrl/api/v1/labours',
+      if (!cleanUrl.contains('/api/')) '$cleanUrl/api/labours',
+      '${ApiConfig.serverUrl}/api/v1/labours',
+      '${ApiConfig.serverUrl}/api/labours',
+    ];
 
-      final data = _parseJsonResponse(response);
-      if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
-        DataSyncNotifier.instance.notifyDataChanged();
-        return {'success': true, 'message': data['message'] ?? 'Labour created', 'labour': data['labour']};
-      }
+    Map<String, dynamic> lastData = {};
+    int lastStatusCode = 404;
 
-      // If 404, try singular route fallback
-      if (response.statusCode == 404) {
-        final fallbackRes = await http
-            .post(Uri.parse('$cleanUrl/labour'), headers: _headers, body: jsonEncode(payload))
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(Uri.parse(endpoint), headers: _headers, body: jsonEncode(payload))
             .timeout(_timeoutDuration);
-        final fallbackData = _parseJsonResponse(fallbackRes);
-        if (fallbackRes.statusCode == 201 || (fallbackRes.statusCode == 200 && fallbackData['success'] == true)) {
-          DataSyncNotifier.instance.notifyDataChanged();
-          return {'success': true, 'message': fallbackData['message'] ?? 'Labour created', 'labour': fallbackData['labour']};
-        }
-      }
 
-      return {
-        'success': false,
-        'message': data['message'] ?? 'Server returned unexpected response (${response.statusCode})',
-      };
-    } catch (e) {
-      debugPrint('API Error in createLabour: $e');
-      return {'success': false, 'message': 'Network error'};
+        final data = _parseJsonResponse(response);
+        lastStatusCode = response.statusCode;
+        lastData = data;
+
+        if ((response.statusCode == 201 || response.statusCode == 200) && (data['success'] != false)) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Labour created successfully',
+            'labour': data['labour'] ?? data,
+          };
+        }
+
+        if (response.statusCode != 404) {
+          return {
+            'success': false,
+            'message': data['message'] ?? 'Failed to create labour (${response.statusCode})',
+          };
+        }
+      } catch (e) {
+        debugPrint('API Error in createLabour at $endpoint: $e');
+      }
     }
+
+    return {
+      'success': false,
+      'message': lastData['message'] ?? 'API Endpoint not found ($lastStatusCode).',
+    };
   }
 
   static Future<Map<String, dynamic>> updateLabour(String id, Map<String, dynamic> payload) async {
