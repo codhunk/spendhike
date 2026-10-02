@@ -23,7 +23,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
   // Filters & State for Labour List
   String _labourSearch = '';
   String _selectedLabourType = 'All'; // All, Carigar, Helper
-  String _selectedStatus = 'Active'; // Active, Inactive, All
+  final String _selectedStatus = 'Active'; // Active, Inactive, All
 
   // Data Collections
   Map<String, dynamic>? _dashboardData;
@@ -119,7 +119,11 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
       appBar: AppBar(
-        title: const Text('Labour Management & Dihadi Ledger', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text(
+          'Labour Management & Dihadi Ledger',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          overflow: TextOverflow.ellipsis,
+        ),
         backgroundColor: Colors.white,
         elevation: 1,
         bottom: TabBar(
@@ -165,7 +169,6 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
     final totalEarned = d['totalEarned'] ?? 0;
     final totalPaid = d['totalPaid'] ?? 0;
     final totalAdvance = d['totalAdvance'] ?? 0;
-    final totalDeduction = d['totalDeduction'] ?? 0;
     final totalOutstanding = d['totalOutstanding'] ?? 0;
     final totalSiteKharcha = d['totalSiteKharcha'] ?? 0;
     final totalLabourCost = d['totalLabourCost'] ?? 0;
@@ -177,103 +180,190 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Quick Header Banner
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF041627), Color(0xFF0453CD)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.white24,
-                    child: Icon(Icons.engineering, color: Colors.white, size: 32),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
+            // Quick Header Banner - Responsive Layout
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 650;
+                if (isMobile) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF041627), Color(0xFF0453CD)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Labour & Dihadi Ledger Overview', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
-                        Text('Total Active Labourers: $totalLabour (Carigar: $carigar | Helper: $helper)', style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                        Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 22,
+                              backgroundColor: Colors.white24,
+                              child: Icon(Icons.engineering, color: Colors.white, size: 24),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Labour & Dihadi Ledger Overview',
+                                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Total Active Labourers: $totalLabour (Carigar: $carigar | Helper: $helper)',
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _showAddLabourModal,
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('Add Labour'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF0453CD),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _showAddLabourModal,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Add Labour'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF0453CD),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  );
+                }
+
+                return Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF041627), Color(0xFF0453CD)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ],
-              ),
+                  child: Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Colors.white24,
+                        child: Icon(Icons.engineering, color: Colors.white, size: 32),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Labour & Dihadi Ledger Overview', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 4),
+                            Text('Total Active Labourers: $totalLabour (Carigar: $carigar | Helper: $helper)', style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: _showAddLabourModal,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add Labour'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF0453CD),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 20),
 
             // Top Metric Cards
             const Text('Labour Counts & Attendance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            GridView.count(
-              crossAxisCount: MediaQuery.of(context).size.width > 900 ? 4 : 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 2.2,
-              children: [
-                _buildDashCard('TOTAL LABOUR', '$totalLabour', Icons.groups, const Color(0xFF0453CD)),
-                _buildDashCard('CARIGAR', '$carigar', Icons.engineering, const Color(0xFF2563EB)),
-                _buildDashCard('HELPER', '$helper', Icons.handyman, const Color(0xFF10B981)),
-                _buildDashCard("TODAY'S DIHADI", '$todayDihadi', Icons.today, const Color(0xFFF59E0B)),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final crossCount = width > 900 ? 4 : (width > 500 ? 2 : 2);
+                final ratio = width > 600 ? 2.2 : (width < 380 ? 1.4 : 1.6);
+
+                return GridView.count(
+                  crossAxisCount: crossCount,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: ratio,
+                  children: [
+                    _buildDashCard('TOTAL LABOUR', '$totalLabour', Icons.groups, const Color(0xFF0453CD)),
+                    _buildDashCard('CARIGAR', '$carigar', Icons.engineering, const Color(0xFF2563EB)),
+                    _buildDashCard('HELPER', '$helper', Icons.handyman, const Color(0xFF10B981)),
+                    _buildDashCard("TODAY'S DIHADI", '$todayDihadi', Icons.today, const Color(0xFFF59E0B)),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 20),
 
             // Financial Metric Cards
             const Text('Financial Ledger Summary', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            GridView.count(
-              crossAxisCount: MediaQuery.of(context).size.width > 900 ? 4 : 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 2.2,
-              children: [
-                _buildDashCard('TOTAL EARNED WAGES', '₹$totalEarned', Icons.account_balance, const Color(0xFF6366F1)),
-                _buildDashCard('TOTAL PAID', '₹$totalPaid', Icons.check_circle, const Color(0xFF10B981)),
-                _buildDashCard('TOTAL ADVANCE', '₹$totalAdvance', Icons.payment, const Color(0xFFF97316)),
-                _buildDashCard('TOTAL OUTSTANDING', '₹$totalOutstanding', Icons.account_balance_wallet, totalOutstanding > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981)),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final crossCount = width > 900 ? 4 : (width > 500 ? 2 : 2);
+                final ratio = width > 600 ? 2.2 : (width < 380 ? 1.4 : 1.6);
+
+                return GridView.count(
+                  crossAxisCount: crossCount,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: ratio,
+                  children: [
+                    _buildDashCard('TOTAL EARNED WAGES', '₹$totalEarned', Icons.account_balance, const Color(0xFF6366F1)),
+                    _buildDashCard('TOTAL PAID', '₹$totalPaid', Icons.check_circle, const Color(0xFF10B981)),
+                    _buildDashCard('TOTAL ADVANCE', '₹$totalAdvance', Icons.payment, const Color(0xFFF97316)),
+                    _buildDashCard('OUTSTANDING', '₹$totalOutstanding', Icons.account_balance_wallet, totalOutstanding > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981)),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 20),
 
             // Site Kharcha & Total Labour Cost
             const Text('Site Expenses & Total Cost', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            GridView.count(
-              crossAxisCount: MediaQuery.of(context).size.width > 900 ? 3 : 1,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 3.2,
-              children: [
-                _buildDashCard('SITE KHARCHA (TEA/FOOD/TOOLS)', '₹$totalSiteKharcha', Icons.local_cafe, const Color(0xFF8B5CF6)),
-                _buildDashCard('MONTHLY DIHADI TOTAL', '$monthlyDihadi Dihadi', Icons.calendar_month, const Color(0xFF0EA5E9)),
-                _buildDashCard('TOTAL LABOUR COST', '₹$totalLabourCost', Icons.monetization_on, const Color(0xFF0453CD)),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final crossCount = width > 900 ? 3 : 1;
+                final ratio = width > 900 ? 3.2 : (width < 400 ? 2.4 : 3.0);
+
+                return GridView.count(
+                  crossAxisCount: crossCount,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: ratio,
+                  children: [
+                    _buildDashCard('SITE KHARCHA (TEA/FOOD)', '₹$totalSiteKharcha', Icons.local_cafe, const Color(0xFF8B5CF6)),
+                    _buildDashCard('MONTHLY DIHADI TOTAL', '$monthlyDihadi Dihadi', Icons.calendar_month, const Color(0xFF0EA5E9)),
+                    _buildDashCard('TOTAL LABOUR COST', '₹$totalLabourCost', Icons.monetization_on, const Color(0xFF0453CD)),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -283,31 +373,40 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
 
   Widget _buildDashCard(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 20,
-            backgroundColor: color.withOpacity(0.1),
-            child: Icon(icon, color: color, size: 20),
+            radius: 18,
+            backgroundColor: color.withValues(alpha: 0.1),
+            child: Icon(icon, color: color, size: 18),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(title, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade600, letterSpacing: 0.5)),
-                const SizedBox(height: 4),
-                Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey.shade600, letterSpacing: 0.3),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: color)),
+                ),
               ],
             ),
           ),
@@ -322,57 +421,106 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
 
     return Column(
       children: [
-        // Top Selectors
+        // Top Selectors - Responsive
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           color: Colors.white,
           child: Column(
             children: [
-              Row(
-                children: [
-                  // Site Selector
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedSiteId,
-                      decoration: InputDecoration(
-                        labelText: 'Select Site/Project',
-                        prefixIcon: const Icon(Icons.construction, color: Color(0xFF0453CD)),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      ),
-                      items: _sites.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, overflow: TextOverflow.ellipsis))).toList(),
-                      onChanged: (val) {
-                        setState(() => _selectedSiteId = val);
-                        _refreshAllTabs();
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 550;
+                  if (isMobile) {
+                    return Column(
+                      children: [
+                        DropdownButtonFormField<String>(
+                          value: _selectedSiteId,
+                          isExpanded: true,
+                          decoration: InputDecoration(
+                            labelText: 'Select Site/Project',
+                            prefixIcon: const Icon(Icons.construction, color: Color(0xFF0453CD)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          ),
+                          items: _sites.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, overflow: TextOverflow.ellipsis))).toList(),
+                          onChanged: (val) {
+                            setState(() => _selectedSiteId = val);
+                            _refreshAllTabs();
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: _selectedDate,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime(2030),
+                              );
+                              if (picked != null) {
+                                setState(() => _selectedDate = picked);
+                                _refreshAllTabs();
+                              }
+                            },
+                            icon: const Icon(Icons.calendar_month, color: Color(0xFF0453CD)),
+                            label: Text('Date: $dateStr', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
 
-                  // Date Picker Button
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                      );
-                      if (picked != null) {
-                        setState(() => _selectedDate = picked);
-                        _refreshAllTabs();
-                      }
-                    },
-                    icon: const Icon(Icons.calendar_month, color: Color(0xFF0453CD)),
-                    label: Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                ],
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedSiteId,
+                          isExpanded: true,
+                          decoration: InputDecoration(
+                            labelText: 'Select Site/Project',
+                            prefixIcon: const Icon(Icons.construction, color: Color(0xFF0453CD)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          ),
+                          items: _sites.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, overflow: TextOverflow.ellipsis))).toList(),
+                          onChanged: (val) {
+                            setState(() => _selectedSiteId = val);
+                            _refreshAllTabs();
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedDate,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                          );
+                          if (picked != null) {
+                            setState(() => _selectedDate = picked);
+                            _refreshAllTabs();
+                          }
+                        },
+                        icon: const Icon(Icons.calendar_month, color: Color(0xFF0453CD)),
+                        label: Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
               // Filter & Search
               Row(
@@ -380,23 +528,23 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
-                        hintText: 'Search Labour by name...',
-                        prefixIcon: const Icon(Icons.search, size: 20),
+                        hintText: 'Search Labour...',
+                        prefixIcon: const Icon(Icons.search, size: 18),
                         filled: true,
                         fillColor: const Color(0xFFF8F9FF),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
                       ),
                       onChanged: (val) {
                         setState(() => _labourSearch = val);
                       },
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   DropdownButton<String>(
                     value: _selectedLabourType,
                     underline: const SizedBox(),
-                    items: ['All', 'Carigar', 'Helper'].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                    items: ['All', 'Carigar', 'Helper'].map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 13)))).toList(),
                     onChanged: (val) {
                       if (val != null) setState(() => _selectedLabourType = val);
                     },
@@ -408,12 +556,12 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
         ),
         const Divider(height: 1),
 
-        // Attendance List
+        // Attendance List - 100% Responsive Item Layout
         Expanded(
           child: _labours.isEmpty
               ? const Center(child: Text('No active labourers assigned to this site.'))
               : ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   itemCount: _labours.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
@@ -432,67 +580,127 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                       elevation: 1,
                       child: Padding(
                         padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: isCarigar ? const Color(0xFF0453CD).withOpacity(0.1) : const Color(0xFF10B981).withOpacity(0.1),
-                              child: Icon(
-                                isCarigar ? Icons.engineering : Icons.handyman,
-                                color: isCarigar ? const Color(0xFF0453CD) : const Color(0xFF10B981),
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isNarrow = constraints.maxWidth < 450;
+                            if (isNarrow) {
+                              return Column(
                                 children: [
-                                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                  const SizedBox(height: 2),
-                                  Text('$type • ₹$rate/Dihadi', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                  Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 18,
+                                        backgroundColor: isCarigar ? const Color(0xFF0453CD).withValues(alpha: 0.1) : const Color(0xFF10B981).withValues(alpha: 0.1),
+                                        child: Icon(
+                                          isCarigar ? Icons.engineering : Icons.handyman,
+                                          color: isCarigar ? const Color(0xFF0453CD) : const Color(0xFF10B981),
+                                          size: 18,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
+                                            Text('$type • ₹$rate/Dihadi', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        '₹${earnedAmount.toInt()}',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0453CD)),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF8F9FF),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: const Color(0xFFC4C6CD)),
+                                    ),
+                                    child: DropdownButton<double>(
+                                      value: currentDihadi,
+                                      isExpanded: true,
+                                      underline: const SizedBox(),
+                                      items: const [
+                                        DropdownMenuItem(value: 0.0, child: Text('0 (Absent)')),
+                                        DropdownMenuItem(value: 0.5, child: Text('0.5 (Half Dihadi)')),
+                                        DropdownMenuItem(value: 1.0, child: Text('1.0 (Full Dihadi)')),
+                                        DropdownMenuItem(value: 1.5, child: Text('1.5 Dihadi')),
+                                        DropdownMenuItem(value: 2.0, child: Text('2.0 Dihadi')),
+                                      ],
+                                      onChanged: (val) {
+                                        if (val != null) {
+                                          setState(() => _attendanceMap[lId] = val);
+                                        }
+                                      },
+                                    ),
+                                  ),
                                 ],
-                              ),
-                            ),
+                              );
+                            }
 
-                            // Dihadi Selector Dropdown (0, 0.5, 1, 1.5, 2)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8F9FF),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: const Color(0xFFC4C6CD)),
-                              ),
-                              child: DropdownButton<double>(
-                                value: currentDihadi,
-                                underline: const SizedBox(),
-                                items: const [
-                                  DropdownMenuItem(value: 0.0, child: Text('0 (Absent)')),
-                                  DropdownMenuItem(value: 0.5, child: Text('0.5 (Half)')),
-                                  DropdownMenuItem(value: 1.0, child: Text('1 (Full)')),
-                                  DropdownMenuItem(value: 1.5, child: Text('1.5 Dihadi')),
-                                  DropdownMenuItem(value: 2.0, child: Text('2 Dihadi')),
-                                ],
-                                onChanged: (val) {
-                                  if (val != null) {
-                                    setState(() {
-                                      _attendanceMap[lId] = val;
-                                    });
-                                  }
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-
-                            // Earned Amount Display
-                            SizedBox(
-                              width: 80,
-                              child: Text(
-                                '₹${earnedAmount.toInt()}',
-                                textAlign: TextAlign.right,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0453CD)),
-                              ),
-                            ),
-                          ],
+                            return Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: isCarigar ? const Color(0xFF0453CD).withValues(alpha: 0.1) : const Color(0xFF10B981).withValues(alpha: 0.1),
+                                  child: Icon(
+                                    isCarigar ? Icons.engineering : Icons.handyman,
+                                    color: isCarigar ? const Color(0xFF0453CD) : const Color(0xFF10B981),
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
+                                      Text('$type • ₹$rate/Dihadi', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF8F9FF),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: const Color(0xFFC4C6CD)),
+                                  ),
+                                  child: DropdownButton<double>(
+                                    value: currentDihadi,
+                                    underline: const SizedBox(),
+                                    items: const [
+                                      DropdownMenuItem(value: 0.0, child: Text('0 (Absent)')),
+                                      DropdownMenuItem(value: 0.5, child: Text('0.5 (Half)')),
+                                      DropdownMenuItem(value: 1.0, child: Text('1 (Full)')),
+                                      DropdownMenuItem(value: 1.5, child: Text('1.5 Dihadi')),
+                                      DropdownMenuItem(value: 2.0, child: Text('2 Dihadi')),
+                                    ],
+                                    onChanged: (val) {
+                                      if (val != null) {
+                                        setState(() => _attendanceMap[lId] = val);
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                SizedBox(
+                                  width: 70,
+                                  child: Text(
+                                    '₹${earnedAmount.toInt()}',
+                                    textAlign: TextAlign.right,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0453CD)),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     );
@@ -500,30 +708,62 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                 ),
         ),
 
-        // Bulk Save Attendance Bar
+        // Bulk Save Attendance Bar - Responsive
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           color: Colors.white,
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Total Labourers: ${_labours.length} | Today\'s Site Dihadi: ${_attendanceMap.values.fold(0.0, (a, b) => a + b)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: _saveBulkAttendance,
-                icon: const Icon(Icons.save, size: 18),
-                label: const Text('Save Attendance'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0453CD),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
-            ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 500;
+              final totalSiteDihadi = _attendanceMap.values.fold(0.0, (a, b) => a + b);
+
+              if (isMobile) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Total Labourers: ${_labours.length} | Today\'s Dihadi: $totalSiteDihadi',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton.icon(
+                      onPressed: _saveBulkAttendance,
+                      icon: const Icon(Icons.save, size: 18),
+                      label: const Text('Save Attendance'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0453CD),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Total Labourers: ${_labours.length} | Today\'s Site Dihadi: $totalSiteDihadi',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _saveBulkAttendance,
+                    icon: const Icon(Icons.save, size: 18),
+                    label: const Text('Save Attendance'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0453CD),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ],
@@ -574,38 +814,76 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
   Widget _buildLabourersTab() {
     return Column(
       children: [
-        // Controls
+        // Controls - Responsive
         Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search by Name or Mobile...',
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          padding: const EdgeInsets.all(12),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 500;
+              if (isMobile) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search by Name or Mobile...',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      ),
+                      onChanged: (val) {
+                        _labourSearch = val;
+                        _refreshAllTabs();
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton.icon(
+                      onPressed: _showAddLabourModal,
+                      icon: const Icon(Icons.person_add, size: 18),
+                      label: const Text('Add Labour'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0453CD),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search by Name or Mobile...',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onChanged: (val) {
+                        _labourSearch = val;
+                        _refreshAllTabs();
+                      },
+                    ),
                   ),
-                  onChanged: (val) {
-                    _labourSearch = val;
-                    _refreshAllTabs();
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: _showAddLabourModal,
-                icon: const Icon(Icons.person_add),
-                label: const Text('Add Labour'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0453CD),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
-              ),
-            ],
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: _showAddLabourModal,
+                    icon: const Icon(Icons.person_add),
+                    label: const Text('Add Labour'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0453CD),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
 
@@ -614,7 +892,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
           child: _labours.isEmpty
               ? const Center(child: Text('No labourers found.'))
               : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   itemCount: _labours.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
@@ -637,11 +915,11 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                           );
                         },
                         leading: CircleAvatar(
-                          backgroundColor: isCarigar ? const Color(0xFF0453CD).withOpacity(0.1) : const Color(0xFF10B981).withOpacity(0.1),
+                          backgroundColor: isCarigar ? const Color(0xFF0453CD).withValues(alpha: 0.1) : const Color(0xFF10B981).withValues(alpha: 0.1),
                           child: Icon(isCarigar ? Icons.engineering : Icons.handyman, color: isCarigar ? const Color(0xFF0453CD) : const Color(0xFF10B981)),
                         ),
-                        title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('$type • Mobile: $mobile • Rate: ₹$rate/Dihadi'),
+                        title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                        subtitle: Text('$type • Mobile: $mobile • ₹$rate/Dihadi', overflow: TextOverflow.ellipsis),
                         trailing: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -666,17 +944,40 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Payments & Advances Log', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ElevatedButton.icon(
-                onPressed: _showRecordPaymentModal,
-                icon: const Icon(Icons.add),
-                label: const Text('Record Payment / Advance'),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0453CD), foregroundColor: Colors.white),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 500;
+              if (isMobile) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Payments & Advances Log', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _showRecordPaymentModal,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Record Payment / Advance'),
+                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0453CD), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Payments & Advances Log', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ElevatedButton.icon(
+                    onPressed: _showRecordPaymentModal,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Record Payment / Advance'),
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0453CD), foregroundColor: Colors.white),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
           const Text('Tap "Record Payment / Advance" to record transactions for labourers.', style: TextStyle(color: Colors.grey)),
@@ -692,17 +993,40 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Site Kharcha (Labour Expense)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ElevatedButton.icon(
-                onPressed: _showRecordKharchaModal,
-                icon: const Icon(Icons.add),
-                label: const Text('Record Site Kharcha'),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0453CD), foregroundColor: Colors.white),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 500;
+              if (isMobile) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Site Kharcha (Labour Expense)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _showRecordKharchaModal,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Record Site Kharcha'),
+                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0453CD), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Site Kharcha (Labour Expense)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ElevatedButton.icon(
+                    onPressed: _showRecordKharchaModal,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Record Site Kharcha'),
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0453CD), foregroundColor: Colors.white),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
 
@@ -727,8 +1051,8 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                       backgroundColor: Color(0xFF8B5CF6),
                       child: Icon(Icons.local_cafe, color: Colors.white),
                     ),
-                    title: Text('$category (₹$amount)', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('$dateStr${desc.isNotEmpty ? ' • $desc' : ''}'),
+                    title: Text('$category (₹$amount)', style: const TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                    subtitle: Text('$dateStr${desc.isNotEmpty ? ' • $desc' : ''}', overflow: TextOverflow.ellipsis),
                     trailing: Text('₹$amount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF8B5CF6))),
                   ),
                 );

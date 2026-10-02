@@ -89,7 +89,7 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
       appBar: AppBar(
-        title: Text(name),
+        title: Text(name, overflow: TextOverflow.ellipsis),
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFF0453CD),
@@ -159,31 +159,32 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 28,
-                    backgroundColor: isCarigar ? const Color(0xFF0453CD).withOpacity(0.1) : const Color(0xFF10B981).withOpacity(0.1),
+                    radius: 24,
+                    backgroundColor: isCarigar ? const Color(0xFF0453CD).withValues(alpha: 0.1) : const Color(0xFF10B981).withValues(alpha: 0.1),
                     child: Icon(
                       isCarigar ? Icons.engineering : Icons.handyman,
                       color: isCarigar ? const Color(0xFF0453CD) : const Color(0xFF10B981),
-                      size: 28,
+                      size: 24,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
                           children: [
-                            Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            const SizedBox(width: 8),
+                            Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: isCarigar ? const Color(0xFF0453CD).withOpacity(0.1) : const Color(0xFF10B981).withOpacity(0.1),
+                                color: isCarigar ? const Color(0xFF0453CD).withValues(alpha: 0.1) : const Color(0xFF10B981).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -198,8 +199,8 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text('ID: $customId • Site: $siteName', style: const TextStyle(color: Colors.grey, fontSize: 13)),
-                        Text('Mobile: $mobile • Rate: ₹$dihadiRate / Dihadi', style: const TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.w500)),
+                        Text('ID: $customId • Site: $siteName', style: const TextStyle(color: Colors.grey, fontSize: 12), overflow: TextOverflow.ellipsis),
+                        Text('Mobile: $mobile • Rate: ₹$dihadiRate / Dihadi', style: const TextStyle(color: Colors.black87, fontSize: 12, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
@@ -209,24 +210,32 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
           ),
           const SizedBox(height: 16),
 
-          // Financial Summary Cards
+          // Financial Summary Cards - Responsive
           const Text('Financial Summary', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          GridView.count(
-            crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 2.2,
-            children: [
-              _buildSummaryTile('Total Dihadi', '$totalDihadi Dihadi', Icons.calendar_today, Colors.blue),
-              _buildSummaryTile('Total Earned', '₹$totalEarned', Icons.monetization_on, Colors.indigo),
-              _buildSummaryTile('Total Paid', '₹$totalPaid', Icons.check_circle, Colors.green),
-              _buildSummaryTile('Total Advance', '₹$totalAdvance', Icons.payment, Colors.orange),
-              _buildSummaryTile('Total Deduction', '₹$totalDeduction', Icons.remove_circle_outline, Colors.purple),
-              _buildSummaryTile('Outstanding Balance', '₹$outstanding', Icons.account_balance_wallet, outstanding > 0 ? Colors.red : Colors.green),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final crossCount = width > 600 ? 3 : 2;
+              final ratio = width > 600 ? 2.5 : (width < 380 ? 1.4 : 1.6);
+
+              return GridView.count(
+                crossAxisCount: crossCount,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: ratio,
+                children: [
+                  _buildSummaryTile('Total Dihadi', '$totalDihadi Dihadi', Icons.calendar_today, Colors.blue),
+                  _buildSummaryTile('Total Earned', '₹$totalEarned', Icons.monetization_on, Colors.indigo),
+                  _buildSummaryTile('Total Paid', '₹$totalPaid', Icons.check_circle, Colors.green),
+                  _buildSummaryTile('Total Advance', '₹$totalAdvance', Icons.payment, Colors.orange),
+                  _buildSummaryTile('Total Deduction', '₹$totalDeduction', Icons.remove_circle_outline, Colors.purple),
+                  _buildSummaryTile('Outstanding Balance', '₹$outstanding', Icons.account_balance_wallet, outstanding > 0 ? Colors.red : Colors.green),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -235,7 +244,7 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
 
   Widget _buildSummaryTile(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -244,19 +253,23 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
       child: Row(
         children: [
           CircleAvatar(
-            radius: 18,
-            backgroundColor: color.withOpacity(0.1),
-            child: Icon(icon, color: color, size: 18),
+            radius: 16,
+            backgroundColor: color.withValues(alpha: 0.1),
+            child: Icon(icon, color: color, size: 16),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                Text(title, style: const TextStyle(fontSize: 9, color: Colors.grey), overflow: TextOverflow.ellipsis, maxLines: 1),
                 const SizedBox(height: 2),
-                Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color)),
+                ),
               ],
             ),
           ),
@@ -338,7 +351,7 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
         return Card(
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: const Color(0xFF0453CD).withOpacity(0.1),
+              backgroundColor: const Color(0xFF0453CD).withValues(alpha: 0.1),
               child: Text('$dihadi', style: const TextStyle(color: Color(0xFF0453CD), fontWeight: FontWeight.bold)),
             ),
             title: Text('Date: $dateStr', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
@@ -373,14 +386,14 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
         return Card(
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: isAdvance ? Colors.orange.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+              backgroundColor: isAdvance ? Colors.orange.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
               child: Icon(
                 isAdvance ? Icons.payment : Icons.check_circle,
                 color: isAdvance ? Colors.orange : Colors.green,
               ),
             ),
-            title: Text('$pmtType (₹$amount)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text('$dateStr • Method: $method${notes.isNotEmpty ? ' • $notes' : ''}'),
+            title: Text('$pmtType (₹$amount)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
+            subtitle: Text('$dateStr • Method: $method${notes.isNotEmpty ? ' • $notes' : ''}', overflow: TextOverflow.ellipsis),
             trailing: Text('₹$amount', style: TextStyle(fontWeight: FontWeight.bold, color: isAdvance ? Colors.orange : Colors.green)),
           ),
         );
