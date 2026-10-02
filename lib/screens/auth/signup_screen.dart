@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../widgets/spend_hike_logo.dart';
+import 'create_passcode_screen.dart';
+
 
 class SignupScreen extends StatefulWidget {
+
   const SignupScreen({super.key});
 
   @override
@@ -300,7 +303,11 @@ class _SignupScreenState extends State<SignupScreen> {
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
-                        Navigator.pushReplacementNamed(context, '/main');
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const CreatePasscodeScreen()),
+                        );
+
                       } else if (mounted) {
                         setState(() {
                           _errorMessage = res['message'] ?? 'Signup failed. Please try again.';

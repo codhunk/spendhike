@@ -3,9 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
+import 'screens/auth/create_passcode_screen.dart';
+import 'screens/auth/passcode_lock_screen.dart';
+import 'screens/auth/change_passcode_screen.dart';
 import 'screens/navigation/main_navigation.dart';
 import 'services/api_service.dart';
 import 'services/app_settings.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -109,9 +113,13 @@ class MyApp extends StatelessWidget {
             '/login': (context) => const LoginScreen(),
             '/signup': (context) => const SignupScreen(),
             '/main': (context) => const MainNavigation(),
+            '/create-passcode': (context) => const CreatePasscodeScreen(),
+            '/lock-passcode': (context) => const PasscodeLockScreen(),
+            '/change-passcode': (context) => const ChangePasscodeScreen(),
           },
         );
       },
     );
   }
 }
+

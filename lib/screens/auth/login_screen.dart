@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../../services/passcode_service.dart';
 import '../../widgets/spend_hike_logo.dart';
+import 'create_passcode_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+
   const LoginScreen({super.key});
 
   @override
@@ -20,8 +23,22 @@ class _LoginScreenState extends State<LoginScreen> {
   final _otpController = TextEditingController();
   final _nameController = TextEditingController();
 
+  Future<void> _handlePostLoginNavigation() async {
+    final isPasscodeConfigured = await PasscodeService.isPasscodeConfigured();
+    if (!mounted) return;
+    if (isPasscodeConfigured) {
+      Navigator.pushReplacementNamed(context, '/main');
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const CreatePasscodeScreen()),
+      );
+    }
+  }
+
   @override
   void dispose() {
+
     _emailController.dispose();
     _passwordController.dispose();
     _forgotEmailController.dispose();
@@ -333,8 +350,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                         if (mounted) setState(() => _isLoading = false);
                         if (res['success'] == true && mounted) {
-                          Navigator.pushReplacementNamed(context, '/main');
+                          await _handlePostLoginNavigation();
                         } else if (mounted) {
+
                           setState(() {
                             _errorMessage = res['message'] ?? 'Login failed. Please check your credentials.';
                           });
@@ -460,8 +478,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
                           if (mounted) setState(() => _isLoading = false);
                           if (res['success'] == true && mounted) {
-                            Navigator.pushReplacementNamed(context, '/main');
+                            await _handlePostLoginNavigation();
                           } else if (mounted) {
+
                             setState(() {
                               _errorMessage = res['message'] ?? 'Invalid OTP code.';
                             });

@@ -1,0 +1,397 @@
+{
+  "info": {
+    "_postman_id": "spendhike-backend-collection-v1",
+    "name": "SpendHike Backend API",
+    "description": "Postman Collection for SpendHike RESTful Backend API powered by Node.js, Express, TypeScript, and MongoDB Atlas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://spendhike-server.onrender.com",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "groupId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Auth Service",
+      "item": [
+        {
+          "name": "1. Signup User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alexander Vance\",\n  \"email\": \"alex.vance@spendhike.com\",\n  \"password\": \"Password123!\",\n  \"mobile\": \"+91 98765 43210\",\n  \"company\": \"Vance Construction Ltd.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "2. Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('authToken', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alex.vance@spendhike.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "3. Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Project Groups",
+      "item": [
+        {
+          "name": "4. List Project Groups",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/groups?searchQuery=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "groups"],
+              "query": [
+                {
+                  "key": "searchQuery",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Create Project Group",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.group && jsonData.group._id) {",
+                  "    pm.collectionVariables.set('groupId', jsonData.group._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Site A - Construction\",\n  \"description\": \"Main commercial tower ledger\",\n  \"icon\": \"construction\",\n  \"isPrimary\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "groups"]
+            }
+          }
+        },
+        {
+          "name": "6. Get Group By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/groups/{{groupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "groups", "{{groupId}}"]
+            }
+          }
+        },
+        {
+          "name": "7. Add Member to Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ravi.kumar@spendhike.com\",\n  \"role\": \"Manager\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/groups/{{groupId}}/members",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "groups", "{{groupId}}", "members"]
+            }
+          }
+        },
+        {
+          "name": "8. List Group Members",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/groups/{{groupId}}/members",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "groups", "{{groupId}}", "members"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions Service",
+      "item": [
+        {
+          "name": "9. Add Transaction (Income / Received)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{groupId}}\",\n  \"type\": \"RECEIVED\",\n  \"category\": \"LABOUR\",\n  \"amount\": 142500,\n  \"description\": \"Project Milestone Payment\",\n  \"paymentMethod\": \"Bank Transfer\",\n  \"status\": \"SETTLED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions"]
+            }
+          }
+        },
+        {
+          "name": "10. Add Transaction (Expense / Debit)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{groupId}}\",\n  \"type\": \"DEBIT\",\n  \"category\": \"MATERIAL\",\n  \"amount\": 22355.20,\n  \"description\": \"Cement & Steel Supply Purchase\",\n  \"paymentMethod\": \"UPI\",\n  \"status\": \"SETTLED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions"]
+            }
+          }
+        },
+        {
+          "name": "11. List Transactions (Master Ledger)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions?projectId={{groupId}}&type=&category=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions"],
+              "query": [
+                {
+                  "key": "projectId",
+                  "value": "{{groupId}}"
+                },
+                {
+                  "key": "type",
+                  "value": ""
+                },
+                {
+                  "key": "category",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports & Analytics",
+      "item": [
+        {
+          "name": "12. Profit & Loss Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/profit-loss?projectId={{groupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reports", "profit-loss"],
+              "query": [
+                {
+                  "key": "projectId",
+                  "value": "{{groupId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "13. Spending Category Breakdown",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/categories?projectId={{groupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reports", "categories"],
+              "query": [
+                {
+                  "key": "projectId",
+                  "value": "{{groupId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "14. Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reports", "dashboard"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

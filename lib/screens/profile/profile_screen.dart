@@ -5,8 +5,12 @@ import '../../services/api_service.dart';
 import '../../services/app_settings.dart';
 import '../../services/cloudinary_service.dart';
 import '../../services/data_sync_notifier.dart';
+import '../auth/change_passcode_screen.dart';
+import '../auth/create_passcode_screen.dart';
+
 
 class ProfileScreen extends StatefulWidget {
+
   const ProfileScreen({super.key});
 
   @override
@@ -463,22 +467,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Icons.security,
       [
         _buildSettingItem(
-          icon: Icons.dialpad,
-          title: 'PIN Code Unlock',
-          trailing: Switch(
-            value: _user.pinEnabled,
-            onChanged: (val) {
-              if (val) {
-                _showPinChangeDialog();
-              } else {
-                _updateProfileField({'pinEnabled': false});
-                _showSnackBar('PIN unlock disabled');
-              }
-            },
-            activeColor: const Color(0xFF0453CD),
-          ),
-          onTap: () => _showPinChangeDialog(),
+          icon: Icons.lock_outline,
+          title: 'Passcode Lock',
+          subtitle: _user.passcodeConfigured ? 'Passcode Enabled' : 'Configure Passcode',
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF94A3B8)),
+          onTap: () {
+            if (_user.passcodeConfigured) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChangePasscodeScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CreatePasscodeScreen(isResetFlow: true)),
+              );
+            }
+          },
         ),
+        if (_user.passcodeConfigured)
+          _buildSettingItem(
+            icon: Icons.key_outlined,
+            title: 'Change Passcode',
+            subtitle: 'Update your 4 or 6-digit passcode',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChangePasscodeScreen()),
+              );
+            },
+          ),
         _buildSettingItem(
           icon: Icons.fingerprint,
           title: 'Biometric Unlock',
@@ -499,6 +517,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
+
 
   Widget _buildDataBackup() {
     return _buildSettingsGroup(

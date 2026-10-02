@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../widgets/spend_hike_logo.dart';
 import '../auth/login_screen.dart';
-import '../navigation/main_navigation.dart';
+
+
+import '../../services/passcode_service.dart';
+import '../auth/create_passcode_screen.dart';
+import '../auth/passcode_lock_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -47,7 +51,17 @@ class _SplashScreenState extends State<SplashScreen>
         final isLoggedIn = await ApiService.initSession();
         if (!mounted) return;
 
-        final targetPage = isLoggedIn ? const MainNavigation() : const LoginScreen();
+        Widget targetPage;
+        if (isLoggedIn) {
+          final isPasscodeSet = await PasscodeService.isPasscodeConfigured();
+          if (isPasscodeSet) {
+            targetPage = const PasscodeLockScreen();
+          } else {
+            targetPage = const CreatePasscodeScreen();
+          }
+        } else {
+          targetPage = const LoginScreen();
+        }
 
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
@@ -60,6 +74,7 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
   }
+
 
   @override
   void dispose() {

@@ -15,6 +15,7 @@ class UserModel {
   final String language;
   final bool biometricEnabled;
   final bool pinEnabled;
+  final bool passcodeConfigured;
   final bool darkMode;
   final String lastSync;
 
@@ -33,6 +34,7 @@ class UserModel {
     required this.language,
     required this.biometricEnabled,
     required this.pinEnabled,
+    this.passcodeConfigured = false,
     required this.darkMode,
     required this.lastSync,
   });
@@ -53,6 +55,7 @@ class UserModel {
       language: json['language'] ?? 'English (IN)',
       biometricEnabled: json['biometricEnabled'] ?? true,
       pinEnabled: json['pinEnabled'] ?? true,
+      passcodeConfigured: json['passcodeConfigured'] ?? json['pinEnabled'] ?? false,
       darkMode: json['darkMode'] ?? false,
       lastSync: json['lastSync'] ?? 'Live Server Connected',
     );
@@ -73,6 +76,7 @@ class UserModel {
     String? language,
     bool? biometricEnabled,
     bool? pinEnabled,
+    bool? passcodeConfigured,
     bool? darkMode,
     String? lastSync,
   }) {
@@ -91,10 +95,12 @@ class UserModel {
       language: language ?? this.language,
       biometricEnabled: biometricEnabled ?? this.biometricEnabled,
       pinEnabled: pinEnabled ?? this.pinEnabled,
+      passcodeConfigured: passcodeConfigured ?? this.passcodeConfigured,
       darkMode: darkMode ?? this.darkMode,
       lastSync: lastSync ?? this.lastSync,
     );
   }
+
 
   Map<String, dynamic> toJson() => {
         'id': id,
