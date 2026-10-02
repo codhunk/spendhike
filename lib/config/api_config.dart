@@ -36,8 +36,10 @@ class ApiConfig {
   static String get categoryBreakdownUrl => '$serverUrl/api/v1/reports/categories';
   static String get dashboardSummaryUrl => '$serverUrl/api/v1/reports/dashboard';
 
-  /// Candidate URLs used for server availability resolution (Render production live link)
+  /// Candidate URLs used for server availability resolution (Local & Render production)
   static List<String> get candidateUrls => [
+        'http://10.0.2.2:5000/api/v1',
+        'http://localhost:5000/api/v1',
         '$serverUrl/api/v1',
       ];
 }

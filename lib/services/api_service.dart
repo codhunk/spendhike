@@ -47,6 +47,8 @@ class ApiService {
 
     final candidates = <String>[
       '$cleanActive$cleanPath',
+      'http://10.0.2.2:5000/api/v1$cleanPath',
+      'http://localhost:5000/api/v1$cleanPath',
       '$server/api/v1$cleanPath',
       '$server/api$cleanPath',
       '$server$cleanPath',
