@@ -1011,23 +1011,29 @@ class ApiService {
     String? status,
     String? search,
   }) async {
-    final activeUrl = await getActiveBaseUrl();
-    try {
-      final queryParams = <String, String>{};
-      if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
-      if (labourType != null && labourType.isNotEmpty) queryParams['labourType'] = labourType;
-      if (status != null && status.isNotEmpty) queryParams['status'] = status;
-      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+    final candidateEndpoints = {
+      ..._buildCandidateEndpoints('/labours'),
+      ..._buildCandidateEndpoints('/labour'),
+    }.toList();
 
-      final uri = Uri.parse('$activeUrl/labours').replace(queryParameters: queryParams);
-      final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final queryParams = <String, String>{};
+        if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+        if (labourType != null && labourType.isNotEmpty) queryParams['labourType'] = labourType;
+        if (status != null && status.isNotEmpty) queryParams['status'] = status;
+        if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
-      final data = _parseJsonResponse(response);
-      if (response.statusCode == 200 && data['labours'] is List) {
-        return List<Map<String, dynamic>>.from(data['labours']);
+        final uri = Uri.parse(endpoint).replace(queryParameters: queryParams);
+        final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['labours'] is List) {
+          return List<Map<String, dynamic>>.from(data['labours']);
+        }
+      } catch (e) {
+        debugPrint('API Error in getLabours at $endpoint: $e');
       }
-    } catch (e) {
-      debugPrint('API Error in getLabours: $e');
     }
     return [];
   }
@@ -1158,90 +1164,98 @@ class ApiService {
     String? date,
     String? labourId,
   }) async {
-    final activeUrl = await getActiveBaseUrl();
-    try {
-      final queryParams = <String, String>{};
-      if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
-      if (date != null && date.isNotEmpty) queryParams['date'] = date;
-      if (labourId != null && labourId.isNotEmpty) queryParams['labourId'] = labourId;
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/attendance');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final queryParams = <String, String>{};
+        if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+        if (date != null && date.isNotEmpty) queryParams['date'] = date;
+        if (labourId != null && labourId.isNotEmpty) queryParams['labourId'] = labourId;
 
-      final uri = Uri.parse('$activeUrl/labours/attendance').replace(queryParameters: queryParams);
-      final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+        final uri = Uri.parse(endpoint).replace(queryParameters: queryParams);
+        final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
 
-      final data = _parseJsonResponse(response);
-      if (response.statusCode == 200 && data['records'] is List) {
-        return List<Map<String, dynamic>>.from(data['records']);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['records'] is List) {
+          return List<Map<String, dynamic>>.from(data['records']);
+        }
+      } catch (e) {
+        debugPrint('API Error in getAttendance at $endpoint: $e');
       }
-    } catch (e) {
-      debugPrint('API Error in getAttendance: $e');
     }
     return [];
   }
 
   static Future<Map<String, dynamic>> recordLabourPayment(Map<String, dynamic> payload) async {
-    final activeUrl = await getActiveBaseUrl();
-    try {
-      final response = await http
-          .post(Uri.parse('$activeUrl/labours/payments'), headers: _headers, body: jsonEncode(payload))
-          .timeout(_timeoutDuration);
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/payments');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(Uri.parse(endpoint), headers: _headers, body: jsonEncode(payload))
+            .timeout(_timeoutDuration);
 
-      final data = _parseJsonResponse(response);
-      if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
-        DataSyncNotifier.instance.notifyDataChanged();
-        return {'success': true, 'message': data['message'] ?? 'Payment recorded', 'payment': data['payment']};
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {'success': true, 'message': data['message'] ?? 'Payment recorded', 'payment': data['payment']};
+        }
+      } catch (e) {
+        debugPrint('API Error in recordLabourPayment at $endpoint: $e');
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to record payment'};
-    } catch (e) {
-      debugPrint('API Error in recordLabourPayment: $e');
-      return {'success': false, 'message': 'Network error'};
     }
+    return {'success': false, 'message': 'Failed to record payment'};
   }
 
   static Future<List<Map<String, dynamic>>> getLabourPayments(String id) async {
-    final activeUrl = await getActiveBaseUrl();
-    try {
-      final response = await http.get(Uri.parse('$activeUrl/labours/$id/payments'), headers: _headers).timeout(_timeoutDuration);
-      final data = _parseJsonResponse(response);
-      if (response.statusCode == 200 && data['payments'] is List) {
-        return List<Map<String, dynamic>>.from(data['payments']);
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/$id/payments');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http.get(Uri.parse(endpoint), headers: _headers).timeout(_timeoutDuration);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['payments'] is List) {
+          return List<Map<String, dynamic>>.from(data['payments']);
+        }
+      } catch (e) {
+        debugPrint('API Error in getLabourPayments at $endpoint: $e');
       }
-    } catch (e) {
-      debugPrint('API Error in getLabourPayments: $e');
     }
     return [];
   }
 
   static Future<Map<String, dynamic>?> getLabourLedger(String id) async {
-    final activeUrl = await getActiveBaseUrl();
-    try {
-      final response = await http.get(Uri.parse('$activeUrl/labours/$id/ledger'), headers: _headers).timeout(_timeoutDuration);
-      final data = _parseJsonResponse(response);
-      if (response.statusCode == 200 && data['success'] == true) {
-        return Map<String, dynamic>.from(data);
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/$id/ledger');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http.get(Uri.parse(endpoint), headers: _headers).timeout(_timeoutDuration);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          return Map<String, dynamic>.from(data);
+        }
+      } catch (e) {
+        debugPrint('API Error in getLabourLedger at $endpoint: $e');
       }
-    } catch (e) {
-      debugPrint('API Error in getLabourLedger: $e');
     }
     return null;
   }
 
   static Future<Map<String, dynamic>> recordLabourExpense(Map<String, dynamic> payload) async {
-    final activeUrl = await getActiveBaseUrl();
-    try {
-      final response = await http
-          .post(Uri.parse('$activeUrl/labour-expenses'), headers: _headers, body: jsonEncode(payload))
-          .timeout(_timeoutDuration);
+    final candidateEndpoints = _buildCandidateEndpoints('/labour-expenses');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(Uri.parse(endpoint), headers: _headers, body: jsonEncode(payload))
+            .timeout(_timeoutDuration);
 
-      final data = _parseJsonResponse(response);
-      if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
-        DataSyncNotifier.instance.notifyDataChanged();
-        return {'success': true, 'message': data['message'] ?? 'Expense recorded', 'expense': data['expense']};
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {'success': true, 'message': data['message'] ?? 'Expense recorded', 'expense': data['expense']};
+        }
+      } catch (e) {
+        debugPrint('API Error in recordLabourExpense at $endpoint: $e');
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to record expense'};
-    } catch (e) {
-      debugPrint('API Error in recordLabourExpense: $e');
-      return {'success': false, 'message': 'Network error'};
     }
+    return {'success': false, 'message': 'Failed to record expense'};
   }
 
   static Future<List<Map<String, dynamic>>> getLabourExpenses({
@@ -1250,37 +1264,41 @@ class ApiService {
     String? startDate,
     String? endDate,
   }) async {
-    final activeUrl = await getActiveBaseUrl();
-    try {
-      final queryParams = <String, String>{};
-      if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
-      if (category != null && category.isNotEmpty) queryParams['category'] = category;
-      if (startDate != null && startDate.isNotEmpty) queryParams['startDate'] = startDate;
-      if (endDate != null && endDate.isNotEmpty) queryParams['endDate'] = endDate;
+    final candidateEndpoints = _buildCandidateEndpoints('/labour-expenses');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final queryParams = <String, String>{};
+        if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+        if (category != null && category.isNotEmpty) queryParams['category'] = category;
+        if (startDate != null && startDate.isNotEmpty) queryParams['startDate'] = startDate;
+        if (endDate != null && endDate.isNotEmpty) queryParams['endDate'] = endDate;
 
-      final uri = Uri.parse('$activeUrl/labour-expenses').replace(queryParameters: queryParams);
-      final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+        final uri = Uri.parse(endpoint).replace(queryParameters: queryParams);
+        final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
 
-      final data = _parseJsonResponse(response);
-      if (response.statusCode == 200 && data['expenses'] is List) {
-        return List<Map<String, dynamic>>.from(data['expenses']);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['expenses'] is List) {
+          return List<Map<String, dynamic>>.from(data['expenses']);
+        }
+      } catch (e) {
+        debugPrint('API Error in getLabourExpenses at $endpoint: $e');
       }
-    } catch (e) {
-      debugPrint('API Error in getLabourExpenses: $e');
     }
     return [];
   }
 
   static Future<Map<String, dynamic>?> getLabourDashboard() async {
-    final activeUrl = await getActiveBaseUrl();
-    try {
-      final response = await http.get(Uri.parse('$activeUrl/labours/dashboard'), headers: _headers).timeout(_timeoutDuration);
-      final data = _parseJsonResponse(response);
-      if (response.statusCode == 200 && data['dashboard'] != null) {
-        return Map<String, dynamic>.from(data['dashboard']);
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/dashboard');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http.get(Uri.parse(endpoint), headers: _headers).timeout(_timeoutDuration);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['dashboard'] != null) {
+          return Map<String, dynamic>.from(data['dashboard']);
+        }
+      } catch (e) {
+        debugPrint('API Error in getLabourDashboard at $endpoint: $e');
       }
-    } catch (e) {
-      debugPrint('API Error in getLabourDashboard: $e');
     }
     return null;
   }
