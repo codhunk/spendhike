@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import '../../services/passcode_service.dart';
 
-enum ChangePasscodeStep { verifyOld, createNew, confirmNew }
+enum ChangePasscodeStep { createNew, confirmNew }
 
 class ChangePasscodeScreen extends StatefulWidget {
   const ChangePasscodeScreen({super.key});
@@ -12,12 +12,10 @@ class ChangePasscodeScreen extends StatefulWidget {
 }
 
 class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
-  ChangePasscodeStep _currentStep = ChangePasscodeStep.verifyOld;
+  ChangePasscodeStep _currentStep = ChangePasscodeStep.createNew;
 
-  String _oldPasscode = '';
   String _newPasscode = '';
   int _newPinLength = 4;
-  int _oldPinLength = 4;
 
   final TextEditingController _pinController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
@@ -27,13 +25,12 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadOldPasscodeLength();
+    _loadPasscodeLength();
   }
 
-  Future<void> _loadOldPasscodeLength() async {
+  Future<void> _loadPasscodeLength() async {
     final len = await PasscodeService.getPasscodeLength();
     setState(() {
-      _oldPinLength = len;
       _newPinLength = len;
     });
   }
@@ -47,31 +44,6 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
 
   Future<void> _handleStepCompleted(String inputPin) async {
     switch (_currentStep) {
-      case ChangePasscodeStep.verifyOld:
-        setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-        });
-        final isValid = await PasscodeService.verifyPasscode(inputPin);
-        if (!mounted) return;
-
-        if (isValid) {
-          setState(() {
-            _oldPasscode = inputPin;
-            _currentStep = ChangePasscodeStep.createNew;
-            _pinController.clear();
-            _isLoading = false;
-          });
-          _focusNode.requestFocus();
-        } else {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'Current passcode is incorrect. Please try again.';
-          });
-          _pinController.clear();
-        }
-        break;
-
       case ChangePasscodeStep.createNew:
         if (inputPin.length != _newPinLength) {
           setState(() {
@@ -102,17 +74,14 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
           _errorMessage = null;
         });
 
-        final res = await PasscodeService.changePasscode(
-          oldPasscode: _oldPasscode,
-          newPasscode: _newPasscode,
-        );
+        final res = await PasscodeService.savePasscode(_newPasscode);
 
         if (!mounted) return;
 
         if (res['success'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Passcode changed successfully!'),
+              content: Text('Passcode updated successfully!'),
               backgroundColor: Color(0xFF10B981),
               behavior: SnackBarBehavior.floating,
             ),
@@ -129,32 +98,21 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
     }
   }
 
-  int get _activePinLength {
-    if (_currentStep == ChangePasscodeStep.verifyOld) {
-      return _oldPinLength;
-    }
-    return _newPinLength;
-  }
-
   String get _stepTitle {
     switch (_currentStep) {
-      case ChangePasscodeStep.verifyOld:
-        return 'Enter Current Passcode';
       case ChangePasscodeStep.createNew:
-        return 'Enter New Passcode';
+        return 'Enter Passcode';
       case ChangePasscodeStep.confirmNew:
-        return 'Confirm New Passcode';
+        return 'Confirm Passcode';
     }
   }
 
   String get _stepSubtitle {
     switch (_currentStep) {
-      case ChangePasscodeStep.verifyOld:
-        return 'Verify your existing passcode before changing it.';
       case ChangePasscodeStep.createNew:
-        return 'Select length and enter your new passcode.';
+        return 'Select length and enter your passcode.';
       case ChangePasscodeStep.confirmNew:
-        return 'Re-enter your new passcode to confirm.';
+        return 'Re-enter your passcode to confirm.';
     }
   }
 
@@ -164,7 +122,7 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     final defaultPinTheme = PinTheme(
-      width: _activePinLength == 6 ? 48 : 58,
+      width: _newPinLength == 6 ? 48 : 58,
       height: 60,
       textStyle: TextStyle(
         fontSize: 24,
@@ -207,7 +165,7 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Change Passcode'),
+        title: const Text('Passcode Settings'),
         elevation: 0,
       ),
       body: SafeArea(
@@ -220,12 +178,10 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Progress indicator steps
+                  // Step indicator (2 steps: Enter Passcode -> Confirm Passcode)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildStepDot(0, ChangePasscodeStep.verifyOld),
-                      _buildStepLine(ChangePasscodeStep.createNew),
                       _buildStepDot(1, ChangePasscodeStep.createNew),
                       _buildStepLine(ChangePasscodeStep.confirmNew),
                       _buildStepDot(2, ChangePasscodeStep.confirmNew),
@@ -271,7 +227,6 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
 
                   const SizedBox(height: 28),
 
-                  // Option to select length during createNew step
                   if (_currentStep == ChangePasscodeStep.createNew) ...[
                     Container(
                       padding: const EdgeInsets.all(4),
@@ -294,7 +249,7 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
                   ],
 
                   Pinput(
-                    length: _activePinLength,
+                    length: _newPinLength,
                     controller: _pinController,
                     focusNode: _focusNode,
                     autofocus: true,
@@ -334,7 +289,6 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
                     ),
                   ],
 
-
                   if (_isLoading) ...[
                     const SizedBox(height: 20),
                     const SizedBox(
@@ -360,7 +314,7 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
                         ),
                       ),
                       child: Text(
-                        _currentStep == ChangePasscodeStep.confirmNew ? 'Save New Passcode' : 'Next',
+                        _currentStep == ChangePasscodeStep.confirmNew ? 'Save Passcode' : 'Next',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -390,7 +344,7 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
       ),
       child: Center(
         child: Text(
-          '${index + 1}',
+          '$index',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
