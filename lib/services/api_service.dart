@@ -1013,4 +1013,312 @@ class ApiService {
       };
     }
   }
+
+  // ─── LABOUR MANAGEMENT APIs ──────────────────────────────────────────────
+
+  static Future<List<Map<String, dynamic>>> getLabours({
+    String? siteId,
+    String? labourType,
+    String? status,
+    String? search,
+  }) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final queryParams = <String, String>{};
+      if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+      if (labourType != null && labourType.isNotEmpty) queryParams['labourType'] = labourType;
+      if (status != null && status.isNotEmpty) queryParams['status'] = status;
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+
+      final uri = Uri.parse('$activeUrl/labours').replace(queryParameters: queryParams);
+      final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['labours'] is List) {
+        return List<Map<String, dynamic>>.from(data['labours']);
+      }
+    } catch (e) {
+      debugPrint('API Error in getLabours: $e');
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>?> getLabourById(String id) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final response = await http.get(Uri.parse('$activeUrl/labours/$id'), headers: _headers).timeout(_timeoutDuration);
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['labour'] != null) {
+        return Map<String, dynamic>.from(data['labour']);
+      }
+    } catch (e) {
+      debugPrint('API Error in getLabourById: $e');
+    }
+    return null;
+  }
+
+  static Future<Map<String, dynamic>> createLabour(Map<String, dynamic> payload) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final response = await http
+          .post(Uri.parse('$activeUrl/labours'), headers: _headers, body: jsonEncode(payload))
+          .timeout(_timeoutDuration);
+
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
+        DataSyncNotifier.instance.notifyDataChanged();
+        return {'success': true, 'message': data['message'] ?? 'Labour created', 'labour': data['labour']};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Failed to create labour'};
+    } catch (e) {
+      debugPrint('API Error in createLabour: $e');
+      return {'success': false, 'message': 'Network error'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateLabour(String id, Map<String, dynamic> payload) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final response = await http
+          .put(Uri.parse('$activeUrl/labours/$id'), headers: _headers, body: jsonEncode(payload))
+          .timeout(_timeoutDuration);
+
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['success'] == true) {
+        DataSyncNotifier.instance.notifyDataChanged();
+        return {'success': true, 'message': data['message'] ?? 'Labour updated', 'labour': data['labour']};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Failed to update labour'};
+    } catch (e) {
+      debugPrint('API Error in updateLabour: $e');
+      return {'success': false, 'message': 'Network error'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> deleteLabour(String id) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final response = await http.delete(Uri.parse('$activeUrl/labours/$id'), headers: _headers).timeout(_timeoutDuration);
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['success'] == true) {
+        DataSyncNotifier.instance.notifyDataChanged();
+        return {'success': true, 'message': data['message'] ?? 'Labour deleted'};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Failed to delete labour'};
+    } catch (e) {
+      debugPrint('API Error in deleteLabour: $e');
+      return {'success': false, 'message': 'Network error'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> saveAttendance({
+    required String siteId,
+    required String date,
+    required List<Map<String, dynamic>> records,
+  }) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$activeUrl/labours/attendance'),
+            headers: _headers,
+            body: jsonEncode({'siteId': siteId, 'date': date, 'records': records}),
+          )
+          .timeout(_timeoutDuration);
+
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['success'] == true) {
+        DataSyncNotifier.instance.notifyDataChanged();
+        return {'success': true, 'message': data['message'] ?? 'Attendance saved', 'count': data['count']};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Failed to save attendance'};
+    } catch (e) {
+      debugPrint('API Error in saveAttendance: $e');
+      return {'success': false, 'message': 'Network error'};
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getAttendance({
+    String? siteId,
+    String? date,
+    String? labourId,
+  }) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final queryParams = <String, String>{};
+      if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+      if (date != null && date.isNotEmpty) queryParams['date'] = date;
+      if (labourId != null && labourId.isNotEmpty) queryParams['labourId'] = labourId;
+
+      final uri = Uri.parse('$activeUrl/labours/attendance').replace(queryParameters: queryParams);
+      final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['records'] is List) {
+        return List<Map<String, dynamic>>.from(data['records']);
+      }
+    } catch (e) {
+      debugPrint('API Error in getAttendance: $e');
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> recordLabourPayment(Map<String, dynamic> payload) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final response = await http
+          .post(Uri.parse('$activeUrl/labours/payments'), headers: _headers, body: jsonEncode(payload))
+          .timeout(_timeoutDuration);
+
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
+        DataSyncNotifier.instance.notifyDataChanged();
+        return {'success': true, 'message': data['message'] ?? 'Payment recorded', 'payment': data['payment']};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Failed to record payment'};
+    } catch (e) {
+      debugPrint('API Error in recordLabourPayment: $e');
+      return {'success': false, 'message': 'Network error'};
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getLabourPayments(String id) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final response = await http.get(Uri.parse('$activeUrl/labours/$id/payments'), headers: _headers).timeout(_timeoutDuration);
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['payments'] is List) {
+        return List<Map<String, dynamic>>.from(data['payments']);
+      }
+    } catch (e) {
+      debugPrint('API Error in getLabourPayments: $e');
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>?> getLabourLedger(String id) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final response = await http.get(Uri.parse('$activeUrl/labours/$id/ledger'), headers: _headers).timeout(_timeoutDuration);
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['success'] == true) {
+        return Map<String, dynamic>.from(data);
+      }
+    } catch (e) {
+      debugPrint('API Error in getLabourLedger: $e');
+    }
+    return null;
+  }
+
+  static Future<Map<String, dynamic>> recordLabourExpense(Map<String, dynamic> payload) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final response = await http
+          .post(Uri.parse('$activeUrl/labour-expenses'), headers: _headers, body: jsonEncode(payload))
+          .timeout(_timeoutDuration);
+
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
+        DataSyncNotifier.instance.notifyDataChanged();
+        return {'success': true, 'message': data['message'] ?? 'Expense recorded', 'expense': data['expense']};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Failed to record expense'};
+    } catch (e) {
+      debugPrint('API Error in recordLabourExpense: $e');
+      return {'success': false, 'message': 'Network error'};
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getLabourExpenses({
+    String? siteId,
+    String? category,
+    String? startDate,
+    String? endDate,
+  }) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final queryParams = <String, String>{};
+      if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+      if (category != null && category.isNotEmpty) queryParams['category'] = category;
+      if (startDate != null && startDate.isNotEmpty) queryParams['startDate'] = startDate;
+      if (endDate != null && endDate.isNotEmpty) queryParams['endDate'] = endDate;
+
+      final uri = Uri.parse('$activeUrl/labour-expenses').replace(queryParameters: queryParams);
+      final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['expenses'] is List) {
+        return List<Map<String, dynamic>>.from(data['expenses']);
+      }
+    } catch (e) {
+      debugPrint('API Error in getLabourExpenses: $e');
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>?> getLabourDashboard() async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final response = await http.get(Uri.parse('$activeUrl/labours/dashboard'), headers: _headers).timeout(_timeoutDuration);
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['dashboard'] != null) {
+        return Map<String, dynamic>.from(data['dashboard']);
+      }
+    } catch (e) {
+      debugPrint('API Error in getLabourDashboard: $e');
+    }
+    return null;
+  }
+
+  static Future<List<Map<String, dynamic>>> getLabourMonthlyReport({
+    int? month,
+    int? year,
+    String? siteId,
+    String? labourType,
+  }) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final queryParams = <String, String>{};
+      if (month != null) queryParams['month'] = month.toString();
+      if (year != null) queryParams['year'] = year.toString();
+      if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+      if (labourType != null && labourType.isNotEmpty) queryParams['labourType'] = labourType;
+
+      final uri = Uri.parse('$activeUrl/labours/monthly-report').replace(queryParameters: queryParams);
+      final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['report'] is List) {
+        return List<Map<String, dynamic>>.from(data['report']);
+      }
+    } catch (e) {
+      debugPrint('API Error in getLabourMonthlyReport: $e');
+    }
+    return [];
+  }
+
+  static Future<List<Map<String, dynamic>>> getLabourSiteReport({
+    String? siteId,
+    String? startDate,
+    String? endDate,
+  }) async {
+    final activeUrl = await getActiveBaseUrl();
+    try {
+      final queryParams = <String, String>{};
+      if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+      if (startDate != null && startDate.isNotEmpty) queryParams['startDate'] = startDate;
+      if (endDate != null && endDate.isNotEmpty) queryParams['endDate'] = endDate;
+
+      final uri = Uri.parse('$activeUrl/labours/site-report').replace(queryParameters: queryParams);
+      final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+
+      final data = _parseJsonResponse(response);
+      if (response.statusCode == 200 && data['reports'] is List) {
+        return List<Map<String, dynamic>>.from(data['reports']);
+      }
+    } catch (e) {
+      debugPrint('API Error in getLabourSiteReport: $e');
+    }
+    return [];
+  }
 }

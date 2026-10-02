@@ -200,6 +200,8 @@ class GroupModel {
     required this.members,
   });
 
+  String get name => title;
+
   factory GroupModel.fromJson(Map<String, dynamic> json) {
     var rawMembers = json['members'] as List? ?? [];
     List<MemberModel> memberList =

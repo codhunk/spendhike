@@ -9,6 +9,7 @@ import '../transaction/new_transaction_screen.dart';
 import '../profile/profile_screen.dart';
 import '../groups/groups_screen.dart';
 import '../reports/reports_screen.dart';
+import '../labour/labour_main_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -36,6 +37,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
   static const _navItems = [
     _NavItem(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard'),
+    _NavItem(Icons.engineering_outlined, Icons.engineering, 'Labour'),
     _NavItem(Icons.grid_view_outlined, Icons.grid_view, 'Groups'),
     _NavItem(Icons.analytics_outlined, Icons.analytics, 'Reports'),
     _NavItem(Icons.person_outline, Icons.person, 'Profile'),
@@ -430,9 +432,10 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget _buildBody() {
     switch (_selectedIndex) {
       case 0: return const DashboardScreen();
-      case 1: return const GroupsScreen();
-      case 2: return const ReportsScreen();
-      case 3: return const ProfileScreen();
+      case 1: return const LabourMainScreen();
+      case 2: return const GroupsScreen();
+      case 3: return const ReportsScreen();
+      case 4: return const ProfileScreen();
       default: return const DashboardScreen();
     }
   }
@@ -449,6 +452,11 @@ class _MainNavigationState extends State<MainNavigation> {
           icon: const Icon(Icons.dashboard_outlined),
           selectedIcon: const Icon(Icons.dashboard, color: Colors.white),
           label: AppSettings.instance.tr('Dashboard'),
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.engineering_outlined),
+          selectedIcon: const Icon(Icons.engineering, color: Colors.white),
+          label: AppSettings.instance.tr('Labour'),
         ),
         NavigationDestination(
           icon: const Icon(Icons.grid_view_outlined),

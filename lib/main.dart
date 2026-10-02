@@ -7,6 +7,7 @@ import 'screens/auth/create_passcode_screen.dart';
 import 'screens/auth/passcode_lock_screen.dart';
 import 'screens/auth/change_passcode_screen.dart';
 import 'screens/navigation/main_navigation.dart';
+import 'screens/labour/labour_main_screen.dart';
 import 'services/api_service.dart';
 import 'services/app_settings.dart';
 
@@ -120,6 +121,7 @@ class MyApp extends StatelessWidget {
               '/create-passcode': (context) => const CreatePasscodeScreen(),
               '/lock-passcode': (context) => const PasscodeLockScreen(),
               '/change-passcode': (context) => const ChangePasscodeScreen(),
+              '/labour': (context) => const LabourMainScreen(),
             },
           ),
         );
