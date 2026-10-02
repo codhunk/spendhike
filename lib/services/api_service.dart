@@ -28,55 +28,8 @@ class ApiService {
     if (_customBaseUrl.isNotEmpty) {
       return _customBaseUrl;
     }
-
-    final defaultUrl = baseUrl;
-    try {
-      final healthUrl = ApiConfig.healthUrl;
-      final res = await http
-          .get(Uri.parse(healthUrl))
-          .timeout(const Duration(seconds: 3));
-      if (res.statusCode == 200 && res.body.contains('SpendHike Backend API')) {
-        _customBaseUrl = ApiConfig.baseUrl;
-        return ApiConfig.baseUrl;
-      }
-    } catch (_) {}
-
-    if (_isResolvingUrl) {
-      return defaultUrl;
-    }
-
-    _isResolvingUrl = true;
-
-    try {
-      final results = await Future.wait(
-        _candidateUrls.map((candidate) async {
-          try {
-            final healthUrl = candidate.replaceAll('/api/v1', '/health');
-            final res = await http
-                .get(Uri.parse(healthUrl))
-                .timeout(const Duration(seconds: 3));
-            if (res.statusCode == 200 && res.body.contains('SpendHike Backend API')) {
-              return candidate;
-            }
-          } catch (_) {}
-          return null;
-        }),
-      );
-
-      final workingUrl = results.firstWhere((url) => url != null, orElse: () => null);
-      if (workingUrl != null) {
-        _customBaseUrl = workingUrl;
-        debugPrint('[ApiService] Auto-detected active backend URL: $workingUrl');
-        _isResolvingUrl = false;
-        return workingUrl;
-      }
-    } catch (e) {
-      debugPrint('[ApiService] Error probing candidate URLs: $e');
-    }
-
-    _isResolvingUrl = false;
-    _customBaseUrl = defaultUrl;
-    return defaultUrl;
+    _customBaseUrl = ApiConfig.baseUrl;
+    return ApiConfig.baseUrl;
   }
 
   static String get baseUrl {
