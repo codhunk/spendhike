@@ -1163,6 +1163,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
           return AlertDialog(
+            
             title: const Text('Add New Labourer'),
             content: SingleChildScrollView(
               child: Column(

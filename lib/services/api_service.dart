@@ -36,6 +36,25 @@ class ApiService {
     return ApiConfig.baseUrl;
   }
 
+  static List<String> _buildCandidateEndpoints(String path) {
+    final cleanPath = path.startsWith('/') ? path : '/$path';
+    final server = ApiConfig.serverUrl.endsWith('/')
+        ? ApiConfig.serverUrl.substring(0, ApiConfig.serverUrl.length - 1)
+        : ApiConfig.serverUrl;
+    
+    final active = _customBaseUrl.isNotEmpty ? _customBaseUrl : ApiConfig.baseUrl;
+    final cleanActive = active.endsWith('/') ? active.substring(0, active.length - 1) : active;
+
+    final candidates = <String>[
+      '$cleanActive$cleanPath',
+      '$server/api/v1$cleanPath',
+      '$server/api$cleanPath',
+      '$server$cleanPath',
+    ];
+
+    return candidates.toSet().toList();
+  }
+
   // ─── AUTH TOKEN & USER SESSION ─────────────────────────────────────────────
   static String? _authToken;
   static UserModel? _currentUser;
@@ -1028,16 +1047,10 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> createLabour(Map<String, dynamic> payload) async {
-    final activeUrl = await getActiveBaseUrl();
-    final cleanUrl = activeUrl.endsWith('/') ? activeUrl.substring(0, activeUrl.length - 1) : activeUrl;
-    final candidateEndpoints = <String>[
-      '$cleanUrl/labours',
-      '$cleanUrl/labour',
-      if (!cleanUrl.contains('/api/v1')) '$cleanUrl/api/v1/labours',
-      if (!cleanUrl.contains('/api/')) '$cleanUrl/api/labours',
-      '${ApiConfig.serverUrl}/api/v1/labours',
-      '${ApiConfig.serverUrl}/api/labours',
-    ];
+    final candidateEndpoints = {
+      ..._buildCandidateEndpoints('/labours'),
+      ..._buildCandidateEndpoints('/labour'),
+    }.toList();
 
     Map<String, dynamic> lastData = {};
     int lastStatusCode = 404;
