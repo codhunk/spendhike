@@ -1059,9 +1059,10 @@ class ApiService {
 
   static Future<Map<String, dynamic>> createLabour(Map<String, dynamic> payload) async {
     final activeUrl = await getActiveBaseUrl();
+    final cleanUrl = activeUrl.endsWith('/') ? activeUrl.substring(0, activeUrl.length - 1) : activeUrl;
     try {
       final response = await http
-          .post(Uri.parse('$activeUrl/labours'), headers: _headers, body: jsonEncode(payload))
+          .post(Uri.parse('$cleanUrl/labours'), headers: _headers, body: jsonEncode(payload))
           .timeout(_timeoutDuration);
 
       final data = _parseJsonResponse(response);
@@ -1069,7 +1070,23 @@ class ApiService {
         DataSyncNotifier.instance.notifyDataChanged();
         return {'success': true, 'message': data['message'] ?? 'Labour created', 'labour': data['labour']};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to create labour'};
+
+      // If 404, try singular route fallback
+      if (response.statusCode == 404) {
+        final fallbackRes = await http
+            .post(Uri.parse('$cleanUrl/labour'), headers: _headers, body: jsonEncode(payload))
+            .timeout(_timeoutDuration);
+        final fallbackData = _parseJsonResponse(fallbackRes);
+        if (fallbackRes.statusCode == 201 || (fallbackRes.statusCode == 200 && fallbackData['success'] == true)) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {'success': true, 'message': fallbackData['message'] ?? 'Labour created', 'labour': fallbackData['labour']};
+        }
+      }
+
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Server returned unexpected response (${response.statusCode})',
+      };
     } catch (e) {
       debugPrint('API Error in createLabour: $e');
       return {'success': false, 'message': 'Network error'};
