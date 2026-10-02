@@ -26,8 +26,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool hasActiveSession = ApiService.authToken != null && ApiService.authToken!.isNotEmpty;
-
     return ListenableBuilder(
       listenable: AppSettings.instance,
       builder: (context, child) {
@@ -113,7 +111,7 @@ class MyApp extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
             ),
-            initialRoute: hasActiveSession ? '/main' : '/',
+            initialRoute: '/',
             routes: {
               '/': (context) => const SplashScreen(),
               '/login': (context) => const LoginScreen(),
