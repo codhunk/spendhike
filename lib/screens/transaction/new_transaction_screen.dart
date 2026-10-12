@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../config/app_theme.dart';
 import '../../models/app_models.dart';
 import '../../services/api_service.dart';
+import '../../services/app_settings.dart';
 import '../../services/cloudinary_service.dart';
+import '../../widgets/language_switcher.dart';
 import '../../widgets/spend_hike_logo.dart';
+import '../../widgets/theme_switcher.dart';
 
 class NewTransactionScreen extends StatefulWidget {
   const NewTransactionScreen({super.key});
@@ -26,10 +30,12 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   String? _selectedGroupId;
   bool _isLoadingGroups = true;
 
+  String _tr(String text) => AppSettings.instance.tr(text);
+
   Future<void> _handleAttachment(String source) async {
     if (_attachments.length >= 5) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Maximum 5 bill attachments allowed.')),
+        SnackBar(content: Text(_tr('Maximum 5 bill attachments allowed.'))),
       );
       return;
     }
@@ -45,9 +51,9 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Uploading bill image to Cloudinary...'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(_tr('Uploading bill image to Cloudinary...')),
+        duration: const Duration(seconds: 2),
       ),
     );
 
@@ -62,16 +68,16 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
       });
       if (url != null && url.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bill attached successfully!'),
-            backgroundColor: Color(0xFF10B981),
+          SnackBar(
+            content: Text(_tr('Bill attached successfully!')),
+            backgroundColor: const Color(0xFF10B981),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to upload bill to Cloudinary.'),
-            backgroundColor: Color(0xFFEF4444),
+          SnackBar(
+            content: Text(_tr('Failed to upload bill to Cloudinary.')),
+            backgroundColor: const Color(0xFFEF4444),
           ),
         );
       }
@@ -105,86 +111,96 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FF),
-      appBar: _buildAppBar(),
-      body: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            right: 0,
-            child: IgnorePointer(
-              child: Opacity(
-                opacity: 0.2,
-                child: Container(
-                  width: 500,
-                  height: 500,
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(
-                          'https://lh3.googleusercontent.com/aida-public/AB6AXuAyzLTGsiBA-vRcd7qT0r0KaIIV8Yx_JqZR7s_eeLYNLtkUdLZfXy-bYSQ4z8kblJvf_hhMgjMMnT5bdM7Qqedieu7s--_7bP8dC7e6hZtrj6FGgEbEZd9i70KOSl2gGJbRRS2HiL18W0oKAHda7xsbwwC_HRoR-20DWBIBnDOcgnsbv5hI1S0KB5dPzf_1iy7QNuVobsEABHqfDp_WSsgkiZggSF86g53YKowAmU_Cfn6i-vaVi6VZ'),
-                      fit: BoxFit.contain,
-                      alignment: Alignment.topRight,
+    return ListenableBuilder(
+      listenable: AppSettings.instance,
+      builder: (context, _) {
+        final colors = AppTheme.of(context);
+        return Scaffold(
+          backgroundColor: colors.background,
+          appBar: _buildAppBar(),
+          body: Stack(
+            children: [
+              Positioned(
+                top: 0,
+                right: 0,
+                child: IgnorePointer(
+                  child: Opacity(
+                    opacity: colors.isDark ? 0.06 : 0.2,
+                    child: Container(
+                      width: 500,
+                      height: 500,
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: NetworkImage(
+                              'https://lh3.googleusercontent.com/aida-public/AB6AXuAyzLTGsiBA-vRcd7qT0r0KaIIV8Yx_JqZR7s_eeLYNLtkUdLZfXy-bYSQ4z8kblJvf_hhMgjMMnT5bdM7Qqedieu7s--_7bP8dC7e6hZtrj6FGgEbEZd9i70KOSl2gGJbRRS2HiL18W0oKAHda7xsbwwC_HRoR-20DWBIBnDOcgnsbv5hI1S0KB5dPzf_1iy7QNuVobsEABHqfDp_WSsgkiZggSF86g53YKowAmU_Cfn6i-vaVi6VZ'),
+                          fit: BoxFit.contain,
+                          alignment: Alignment.topRight,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 720),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildAmountSection(),
-                    const SizedBox(height: 24),
-                    _buildSegmentedControl(),
-                    const SizedBox(height: 24),
-                    _buildFormFields(),
-                    const SizedBox(height: 24),
-                  ],
+              SingleChildScrollView(
+                padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildAmountSection(),
+                        const SizedBox(height: 24),
+                        _buildSegmentedControl(),
+                        const SizedBox(height: 24),
+                        _buildFormFields(),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+              _buildSaveButton(),
+            ],
           ),
-          _buildSaveButton(),
-        ],
-      ),
+        );
+      },
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final colors = AppTheme.of(context);
     return AppBar(
-      backgroundColor: const Color(0xFFF8F9FF),
+      backgroundColor: colors.surface,
       elevation: 0,
       scrolledUnderElevation: 0,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1.0),
-        child: Container(color: const Color(0xFFC4C6CD), height: 1.0),
+        child: Container(color: colors.border, height: 1.0),
       ),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Color(0xFF44474C)),
+        icon: Icon(Icons.arrow_back, color: colors.textSecondary),
         onPressed: () => Navigator.pop(context),
       ),
-      title: const Text(
-        'New Transaction',
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF041627)),
+      title: Text(
+        _tr('New Transaction'),
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colors.textPrimary),
       ),
       actions: [
-        const Padding(
-          padding: EdgeInsets.only(right: 8),
+        const ThemeSwitcherButton(),
+        const LanguageSwitcherButton(),
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
           child: SpendHikeIcon(
             size: 28,
-            walletColor: Color(0xFF041627),
-            arrowColor: Color(0xFF0066FF),
+            walletColor: colors.textPrimary,
+            arrowColor: colors.primary,
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.notifications_outlined, color: Color(0xFF44474C)),
+          icon: Icon(Icons.notifications_outlined, color: colors.textSecondary),
           onPressed: () {},
         ),
         const SizedBox(width: 8),
@@ -193,14 +209,16 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildAmountSection() {
+    final colors = AppTheme.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A2B3C),
+        color: colors.isDark ? colors.surface : const Color(0xFF1A2B3C),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.isDark ? colors.border : Colors.transparent),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -208,12 +226,12 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
       ),
       child: Column(
         children: [
-          const Text(
-            'ENTER AMOUNT',
+          Text(
+            _tr('ENTER AMOUNT'),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF8192A7),
+              color: colors.isDark ? colors.textMuted : const Color(0xFF8192A7),
               letterSpacing: 1.5,
             ),
           ),
@@ -221,12 +239,12 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 '₹',
                 style: TextStyle(
                   fontSize: 40,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF8192A7),
+                  color: colors.isDark ? colors.textMuted : const Color(0xFF8192A7),
                 ),
               ),
               const SizedBox(width: 8),
@@ -237,16 +255,16 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                   autofocus: true,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: colors.isDark ? colors.textPrimary : Colors.white,
                   ),
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     hintText: '0.00',
                     hintStyle: TextStyle(
-                      color: const Color(0xFF8192A7).withOpacity(0.5),
+                      color: (colors.isDark ? colors.textMuted : const Color(0xFF8192A7)).withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -259,11 +277,13 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildSegmentedControl() {
+    final colors = AppTheme.of(context);
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF4FF),
+        color: colors.surfaceSubtle,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
       ),
       child: Row(
         children: [
@@ -276,6 +296,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildSegmentItem(String title) {
+    final colors = AppTheme.of(context);
     final isSelected = _transactionType == title;
     return Expanded(
       child: GestureDetector(
@@ -283,16 +304,16 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF356EE7) : Colors.transparent,
+            color: isSelected ? colors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            title,
+            _tr(title),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isSelected ? const Color(0xFFFEFCFF) : const Color(0xFF44474C),
+              color: isSelected ? Colors.white : colors.textSecondary,
             ),
           ),
         ),
@@ -336,20 +357,21 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildDatePicker() {
+    final colors = AppTheme.of(context);
     final formattedDate = _selectedDate.toLocal().toString().split(' ')[0];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.calendar_month, size: 16, color: Color(0xFF44474C)),
-            SizedBox(width: 4),
-            Text('Transaction Date',
+            Icon(Icons.calendar_month, size: 16, color: colors.textSecondary),
+            const SizedBox(width: 4),
+            Text(_tr('Transaction Date'),
                 style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF44474C))),
+                    color: colors.textSecondary)),
           ],
         ),
         const SizedBox(height: 8),
@@ -370,16 +392,16 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: const Color(0xFFC4C6CD)),
+              color: colors.surface,
+              border: Border.all(color: colors.border),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(formattedDate,
-                    style: const TextStyle(fontSize: 16, color: Color(0xFF0B1C30))),
-                const Icon(Icons.calendar_today, color: Color(0xFF44474C), size: 20),
+                    style: TextStyle(fontSize: 16, color: colors.textPrimary)),
+                Icon(Icons.calendar_today, color: colors.textSecondary, size: 20),
               ],
             ),
           ),
@@ -389,50 +411,52 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildGroupDropdown() {
+    final colors = AppTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.folder_outlined, size: 16, color: Color(0xFF44474C)),
-            SizedBox(width: 4),
-            Text('Project / Group',
+            Icon(Icons.folder_outlined, size: 16, color: colors.textSecondary),
+            const SizedBox(width: 4),
+            Text(_tr('Project / Group'),
                 style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF44474C))),
+                    color: colors.textSecondary)),
           ],
         ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: const Color(0xFFC4C6CD)),
+            color: colors.surface,
+            border: Border.all(color: colors.border),
             borderRadius: BorderRadius.circular(8),
           ),
           child: DropdownButtonHideUnderline(
             child: _isLoadingGroups
-                ? const SizedBox(
+                ? SizedBox(
                     height: 24,
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0453CD)),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: colors.primary),
                       ),
                     ),
                   )
                 : DropdownButton<String>(
                     isExpanded: true,
                     value: _selectedGroupId,
-                    hint: const Text('Select Project Group'),
-                    style: const TextStyle(fontSize: 16, color: Color(0xFF0B1C30)),
-                    icon: const Icon(Icons.expand_more, color: Color(0xFF44474C)),
+                    dropdownColor: colors.surface,
+                    hint: Text(_tr('Select Project Group'), style: TextStyle(color: colors.textMuted)),
+                    style: TextStyle(fontSize: 16, color: colors.textPrimary),
+                    icon: Icon(Icons.expand_more, color: colors.textSecondary),
                     items: _groups.isEmpty
-                        ? const [
-                            DropdownMenuItem(value: null, child: Text('General Ledger')),
+                        ? [
+                            DropdownMenuItem(value: null, child: Text(_tr('General Ledger'))),
                           ]
                         : _groups.map((g) {
                             return DropdownMenuItem<String>(
@@ -453,14 +477,15 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildCategoryPicker() {
+    final colors = AppTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Category',
+        Text(_tr('Category'),
             style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF44474C))),
+                color: colors.textSecondary)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 12,
@@ -478,30 +503,32 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildCategoryChip(String title, IconData icon) {
+    final colors = AppTheme.of(context);
     final isSelected = _selectedCategory == title;
+    final activeBg = colors.isDark ? colors.primary : const Color(0xFF041627);
     return GestureDetector(
       onTap: () => setState(() => _selectedCategory = title),
       child: Container(
         width: 100,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF041627) : Colors.transparent,
+          color: isSelected ? activeBg : colors.surface,
           border: Border.all(
-              color: isSelected ? const Color(0xFF041627) : const Color(0xFFC4C6CD)),
+              color: isSelected ? activeBg : colors.border),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           children: [
             Icon(icon,
                 size: 24,
-                color: isSelected ? Colors.white : const Color(0xFF44474C)),
+                color: isSelected ? Colors.white : colors.textSecondary),
             const SizedBox(height: 8),
             Text(
-              title,
+              _tr(title),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : const Color(0xFF44474C),
+                color: isSelected ? Colors.white : colors.textSecondary,
               ),
             ),
           ],
@@ -511,14 +538,15 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildPaymentMethod() {
+    final colors = AppTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Payment Method',
+        Text(_tr('Payment Method'),
             style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF44474C))),
+                color: colors.textSecondary)),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -534,29 +562,32 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildPaymentButton(String title, IconData icon) {
+    final colors = AppTheme.of(context);
     final isSelected = _selectedPaymentMethod == title;
+    final activeBg = colors.isDark ? colors.primary.withValues(alpha: 0.25) : const Color(0xFFDCE9FF);
+    final activeColor = colors.isDark ? colors.primary : const Color(0xFF041627);
     return GestureDetector(
       onTap: () => setState(() => _selectedPaymentMethod = title),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFDCE9FF) : Colors.white,
+          color: isSelected ? activeBg : colors.surface,
           border: Border.all(
-              color: isSelected ? const Color(0xFF041627) : const Color(0xFFC4C6CD)),
+              color: isSelected ? colors.primary : colors.border),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           children: [
             Icon(icon,
-                color: isSelected ? const Color(0xFF041627) : const Color(0xFF44474C)),
+                color: isSelected ? activeColor : colors.textSecondary),
             const SizedBox(height: 8),
             Text(
-              title,
+              _tr(title),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? const Color(0xFF041627) : const Color(0xFF44474C),
+                color: isSelected ? activeColor : colors.textSecondary,
               ),
             ),
           ],
@@ -566,34 +597,36 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildNotes() {
+    final colors = AppTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Notes',
+        Text(_tr('Notes'),
             style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF44474C))),
+                color: colors.textSecondary)),
         const SizedBox(height: 8),
         TextField(
           controller: _notesController,
           maxLines: 3,
+          style: TextStyle(color: colors.textPrimary),
           decoration: InputDecoration(
-            hintText: 'Add details about the transaction...',
-            hintStyle: const TextStyle(color: Color(0xFF74777D)),
+            hintText: _tr('Add details about the transaction...'),
+            hintStyle: TextStyle(color: colors.textMuted),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: colors.surface,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFC4C6CD)),
+              borderSide: BorderSide(color: colors.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFC4C6CD)),
+              borderSide: BorderSide(color: colors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF041627)),
+              borderSide: BorderSide(color: colors.primary),
             ),
           ),
         ),
@@ -602,29 +635,30 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildAttachments() {
+    final colors = AppTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Attachments',
+            Text(_tr('Attachments'),
                 style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF44474C))),
+                    color: colors.textSecondary)),
             Row(
               children: [
                 Text(
                   '${_attachments.length}/5',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF0453CD)),
+                      color: colors.primary),
                 ),
                 const SizedBox(width: 8),
-                const Text('Max 5MB each',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF44474C))),
+                Text(_tr('Max 5MB each'),
+                    style: TextStyle(fontSize: 12, color: colors.textMuted)),
               ],
             ),
           ],
@@ -634,8 +668,8 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
           children: [
             Expanded(
               child: _buildAttachmentCard(
-                'Capture Bill',
-                'Use Camera',
+                _tr('Capture Bill'),
+                _tr('Use Camera'),
                 Icons.add_a_photo,
                 onTap: () => _handleAttachment('Camera'),
               ),
@@ -643,8 +677,8 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: _buildAttachmentCard(
-                'Gallery',
-                'Upload File',
+                _tr('Gallery'),
+                _tr('Upload File'),
                 Icons.upload_file,
                 onTap: () => _handleAttachment('Gallery'),
               ),
@@ -657,15 +691,14 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
 
   Widget _buildAttachmentCard(String title, String subtitle, IconData icon,
       {required VoidCallback onTap}) {
+    final colors = AppTheme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(
-              color: const Color(0xFF041627).withOpacity(0.3),
-              style: BorderStyle.solid),
+          color: colors.surface,
+          border: Border.all(color: colors.border),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -673,20 +706,20 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
             Container(
               width: 56,
               height: 56,
-              decoration: const BoxDecoration(
-                color: Color(0xFF1A2B3C),
+              decoration: BoxDecoration(
+                color: colors.isDark ? colors.surfaceSubtle : const Color(0xFF1A2B3C),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: const Color(0xFF8192A7), size: 32),
+              child: Icon(icon, color: colors.isDark ? colors.textPrimary : const Color(0xFF8192A7), size: 32),
             ),
             const SizedBox(height: 12),
             Text(title,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0B1C30))),
+                    color: colors.textPrimary)),
             Text(subtitle,
-                style: const TextStyle(fontSize: 10, color: Color(0xFF44474C))),
+                style: TextStyle(fontSize: 10, color: colors.textMuted)),
           ],
         ),
       ),
@@ -694,22 +727,23 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildAttachmentList() {
+    final colors = AppTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Attached Bill Files',
+            Text(_tr('Attached Bill Files'),
                 style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF44474C))),
+                    color: colors.textSecondary)),
             if (_isUploadingAttachment)
-              const SizedBox(
+              SizedBox(
                 width: 14,
                 height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0453CD)),
+                child: CircularProgressIndicator(strokeWidth: 2, color: colors.primary),
               ),
           ],
         ),
@@ -721,9 +755,9 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFEFF4FF),
+              color: colors.surfaceSubtle,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFADC6FF)),
+              border: Border.all(color: colors.border),
             ),
             child: Row(
               children: [
@@ -738,24 +772,24 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                       errorBuilder: (_, __, ___) => Container(
                         width: 48,
                         height: 48,
-                        color: const Color(0xFF0453CD),
+                        color: colors.primary,
                         child: const Icon(Icons.receipt, color: Colors.white),
                       ),
                     ),
                   )
                 else
-                  const Icon(Icons.attach_file, size: 24, color: Color(0xFF0453CD)),
+                  Icon(Icons.attach_file, size: 24, color: colors.primary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isImage ? 'Cloudinary Bill Attachment' : fileUrl,
-                        style: const TextStyle(
+                        isImage ? _tr('Cloudinary Bill Attachment') : fileUrl,
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF041627),
+                          color: colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -763,7 +797,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                         fileUrl,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+                        style: TextStyle(fontSize: 10, color: colors.textMuted),
                       ),
                     ],
                   ),
@@ -781,6 +815,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildSaveButton() {
+    final colors = AppTheme.of(context);
     return Positioned(
       bottom: 0,
       left: 0,
@@ -792,8 +827,8 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
             colors: [
-              const Color(0xFFF8F9FF),
-              const Color(0xFFF8F9FF).withOpacity(0.0),
+              colors.background,
+              colors.background.withValues(alpha: 0.0),
             ],
           ),
         ),
@@ -803,7 +838,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
             child: ElevatedButton(
               onPressed: _showSaveConfirmation,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF041627),
+                backgroundColor: colors.isDark ? colors.primary : const Color(0xFF041627),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 shape: RoundedRectangleBorder(
@@ -811,14 +846,14 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                 ),
                 elevation: 8,
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle),
-                  SizedBox(width: 8),
+                  const Icon(Icons.check_circle),
+                  const SizedBox(width: 8),
                   Text(
-                    'SAVE TRANSACTION',
-                    style: TextStyle(
+                    _tr('SAVE TRANSACTION'),
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.5,
@@ -836,38 +871,41 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
   void _showSaveConfirmation() {
+    final colors = AppTheme.of(context);
     final amount = _amountController.text.isEmpty ? '0.00' : _amountController.text;
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: colors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.check_circle, color: Color(0xFF10b981), size: 28),
-            SizedBox(width: 10),
-            Text('Confirm Transaction', style: TextStyle(
+            const Icon(Icons.check_circle, color: Color(0xFF10b981), size: 28),
+            const SizedBox(width: 10),
+            Text(_tr('Confirm Transaction'), style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.5,
+              color: colors.textPrimary,
             )),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildConfirmRow('Type', _transactionType),
-            _buildConfirmRow('Amount', '₹$amount'),
-            _buildConfirmRow('Category', _selectedCategory),
-            _buildConfirmRow('Payment', _selectedPaymentMethod),
+            _buildConfirmRow(_tr('Type'), _tr(_transactionType)),
+            _buildConfirmRow(_tr('Amount'), '₹$amount'),
+            _buildConfirmRow(_tr('Category'), _tr(_selectedCategory)),
+            _buildConfirmRow(_tr('Payment'), _tr(_selectedPaymentMethod)),
             if (_attachments.isNotEmpty)
-              _buildConfirmRow('Attachments', '${_attachments.length} file(s)'),
+              _buildConfirmRow(_tr('Attachments'), '${_attachments.length} file(s)'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Review', style: TextStyle(color: Color(0xFF74777D))),
+            child: Text(_tr('Review'), style: TextStyle(color: colors.textMuted)),
           ),
           ElevatedButton.icon(
             onPressed: () async {
@@ -885,7 +923,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                 Navigator.pop(context, true);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(res['message'] ?? 'Transaction saved successfully!'),
+                    content: Text(_tr(res['message'] ?? 'Transaction saved successfully!')),
                     backgroundColor: const Color(0xFF10b981),
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -894,7 +932,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
               }
             },
             icon: const Icon(Icons.check, size: 18),
-            label: const Text('Confirm & Save'),
+            label: Text(_tr('Confirm & Save')),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF10b981),
               foregroundColor: Colors.white,
@@ -907,18 +945,19 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   Widget _buildConfirmRow(String label, String value) {
+    final colors = AppTheme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(fontSize: 14, color: Color(0xFF44474C))),
+              style: TextStyle(fontSize: 14, color: colors.textSecondary)),
           Text(value,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF041627))),
+                  color: colors.textPrimary)),
         ],
       ),
     );

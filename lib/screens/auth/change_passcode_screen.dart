@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
+import '../../services/app_settings.dart';
 import '../../services/passcode_service.dart';
+import '../../widgets/language_switcher.dart';
 
 enum ChangePasscodeStep { createNew, confirmNew }
 
@@ -21,6 +23,8 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
   final FocusNode _focusNode = FocusNode();
   bool _isLoading = false;
   String? _errorMessage;
+
+  String _tr(String key) => AppSettings.instance.tr(key);
 
   @override
   void initState() {
@@ -47,7 +51,7 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
       case ChangePasscodeStep.createNew:
         if (inputPin.length != _newPinLength) {
           setState(() {
-            _errorMessage = 'Please enter a $_newPinLength-digit passcode';
+            _errorMessage = _tr('Please enter a complete $_newPinLength-digit passcode');
           });
           return;
         }
@@ -63,7 +67,7 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
       case ChangePasscodeStep.confirmNew:
         if (inputPin != _newPasscode) {
           setState(() {
-            _errorMessage = 'Passcodes do not match. Please try again.';
+            _errorMessage = _tr('Passcodes do not match. Please try again.');
           });
           _pinController.clear();
           return;
@@ -80,9 +84,9 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
 
         if (res['success'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Passcode updated successfully!'),
-              backgroundColor: Color(0xFF10B981),
+            SnackBar(
+              content: Text(_tr('Passcode updated successfully!')),
+              backgroundColor: const Color(0xFF10B981),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -90,7 +94,7 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
         } else {
           setState(() {
             _isLoading = false;
-            _errorMessage = res['message'] ?? 'Failed to update passcode';
+            _errorMessage = res['message'] != null ? _tr(res['message']) : _tr('Failed to save passcode. Please try again.');
           });
           _pinController.clear();
         }
@@ -101,18 +105,18 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
   String get _stepTitle {
     switch (_currentStep) {
       case ChangePasscodeStep.createNew:
-        return 'Enter Passcode';
+        return _tr('Enter Passcode');
       case ChangePasscodeStep.confirmNew:
-        return 'Confirm Passcode';
+        return _tr('Confirm Passcode');
     }
   }
 
   String get _stepSubtitle {
     switch (_currentStep) {
       case ChangePasscodeStep.createNew:
-        return 'Select length and enter your passcode.';
+        return _tr('Select length and enter your passcode.');
       case ChangePasscodeStep.confirmNew:
-        return 'Re-enter your passcode to confirm.';
+        return _tr('Re-enter your passcode to confirm.');
     }
   }
 
@@ -163,171 +167,180 @@ class _ChangePasscodeScreenState extends State<ChangePasscodeScreen> {
       ),
     );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Passcode Settings'),
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 32.0),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Step indicator (2 steps: Enter Passcode -> Confirm Passcode)
-                  Row(
+    return ListenableBuilder(
+      listenable: AppSettings.instance,
+      builder: (context, _) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(_tr('Passcode Settings')),
+            elevation: 0,
+            actions: const [
+              LanguageSwitcherButton(),
+              SizedBox(width: 8),
+            ],
+          ),
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 32.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      _buildStepDot(1, ChangePasscodeStep.createNew),
-                      _buildStepLine(ChangePasscodeStep.confirmNew),
-                      _buildStepDot(2, ChangePasscodeStep.confirmNew),
-                    ],
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.key_rounded,
-                      size: 36,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Text(
-                    _stepTitle,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Text(
-                    _stepSubtitle,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  if (_currentStep == ChangePasscodeStep.createNew) ...[
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      // Step indicator (2 steps: Enter Passcode -> Confirm Passcode)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildLengthToggle(4, '4 Digits'),
-                          _buildLengthToggle(6, '6 Digits'),
+                          _buildStepDot(1, ChangePasscodeStep.createNew),
+                          _buildStepLine(ChangePasscodeStep.confirmNew),
+                          _buildStepDot(2, ChangePasscodeStep.confirmNew),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 28),
-                  ],
 
-                  Pinput(
-                    length: _newPinLength,
-                    controller: _pinController,
-                    focusNode: _focusNode,
-                    autofocus: true,
-                    obscureText: true,
-                    obscuringCharacter: '●',
-                    defaultPinTheme: _errorMessage != null ? errorPinTheme : defaultPinTheme,
-                    focusedPinTheme: focusedPinTheme,
-                    onChanged: (val) {
-                      if (_errorMessage != null) {
-                        setState(() {
-                          _errorMessage = null;
-                        });
-                      }
-                    },
-                    onCompleted: (pin) => _handleStepCompleted(pin),
-                  ),
+                      const SizedBox(height: 32),
 
-                  if (_errorMessage != null) ...[
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 18),
-                        const SizedBox(width: 6),
-                        Flexible(
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.key_rounded,
+                          size: 36,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      Text(
+                        _stepTitle,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        _stepSubtitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      if (_currentStep == ChangePasscodeStep.createNew) ...[
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildLengthToggle(4, _tr('4 Digits')),
+                              _buildLengthToggle(6, _tr('6 Digits')),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                      ],
+
+                      Pinput(
+                        length: _newPinLength,
+                        controller: _pinController,
+                        focusNode: _focusNode,
+                        autofocus: true,
+                        obscureText: true,
+                        obscuringCharacter: '●',
+                        defaultPinTheme: _errorMessage != null ? errorPinTheme : defaultPinTheme,
+                        focusedPinTheme: focusedPinTheme,
+                        onChanged: (val) {
+                          if (_errorMessage != null) {
+                            setState(() {
+                              _errorMessage = null;
+                            });
+                          }
+                        },
+                        onCompleted: (pin) => _handleStepCompleted(pin),
+                      ),
+
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 18),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                _errorMessage!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color(0xFFEF4444),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
+                      if (_isLoading) ...[
+                        const SizedBox(height: 20),
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        ),
+                      ],
+
+                      const SizedBox(height: 40),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : () => _handleStepCompleted(_pinController.text),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
                           child: Text(
-                            _errorMessage!,
-                            textAlign: TextAlign.center,
+                            _currentStep == ChangePasscodeStep.confirmNew ? _tr('Save Passcode') : _tr('Next'),
                             style: const TextStyle(
-                              color: Color(0xFFEF4444),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-
-                  if (_isLoading) ...[
-                    const SizedBox(height: 20),
-                    const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2.5),
-                    ),
-                  ],
-
-                  const SizedBox(height: 40),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : () => _handleStepCompleted(_pinController.text),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
                       ),
-                      child: Text(
-                        _currentStep == ChangePasscodeStep.confirmNew ? 'Save Passcode' : 'Next',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

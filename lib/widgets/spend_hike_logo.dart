@@ -4,23 +4,26 @@ import 'package:flutter/material.dart';
 /// Reusable icon component for SpendHike (Wallet + Upward Hike Trend Arrow)
 class SpendHikeIcon extends StatelessWidget {
   final double size;
-  final Color walletColor;
-  final Color arrowColor;
+  final Color? walletColor;
+  final Color? arrowColor;
 
   const SpendHikeIcon({
     super.key,
     this.size = 48.0,
-    this.walletColor = const Color(0xFF0B1C30),
-    this.arrowColor = const Color(0xFF0066FF),
+    this.walletColor,
+    this.arrowColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveWalletColor = walletColor ?? Theme.of(context).colorScheme.onSurface;
+    final effectiveArrowColor = arrowColor ?? Theme.of(context).colorScheme.primary;
+
     return CustomPaint(
       size: Size(size, size),
       painter: _SpendHikeLogoPainter(
-        walletColor: walletColor,
-        arrowColor: arrowColor,
+        walletColor: effectiveWalletColor,
+        arrowColor: effectiveArrowColor,
       ),
     );
   }
@@ -30,31 +33,35 @@ class SpendHikeIcon extends StatelessWidget {
 class SpendHikeLogo extends StatelessWidget {
   final double iconSize;
   final double fontSize;
-  final Color walletColor;
-  final Color arrowColor;
-  final Color textColor;
+  final Color? walletColor;
+  final Color? arrowColor;
+  final Color? textColor;
   final bool isVertical;
 
   const SpendHikeLogo({
     super.key,
     this.iconSize = 36.0,
     this.fontSize = 24.0,
-    this.walletColor = const Color(0xFF0B1C30),
-    this.arrowColor = const Color(0xFF0066FF),
-    this.textColor = const Color(0xFF0B1C30),
+    this.walletColor,
+    this.arrowColor,
+    this.textColor,
     this.isVertical = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveTextColor = textColor ?? Theme.of(context).colorScheme.onSurface;
+    final effectiveWalletColor = walletColor ?? Theme.of(context).colorScheme.onSurface;
+    final effectiveArrowColor = arrowColor ?? Theme.of(context).colorScheme.primary;
+
     if (isVertical) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           SpendHikeIcon(
             size: iconSize,
-            walletColor: walletColor,
-            arrowColor: arrowColor,
+            walletColor: effectiveWalletColor,
+            arrowColor: effectiveArrowColor,
           ),
           const SizedBox(height: 12),
           Text(
@@ -62,7 +69,7 @@ class SpendHikeLogo extends StatelessWidget {
             style: TextStyle(
               fontSize: fontSize,
               fontWeight: FontWeight.w800,
-              color: textColor,
+              color: effectiveTextColor,
               letterSpacing: -0.5,
             ),
           ),
@@ -76,8 +83,8 @@ class SpendHikeLogo extends StatelessWidget {
       children: [
         SpendHikeIcon(
           size: iconSize,
-          walletColor: walletColor,
-          arrowColor: arrowColor,
+          walletColor: effectiveWalletColor,
+          arrowColor: effectiveArrowColor,
         ),
         const SizedBox(width: 12),
         Text(
@@ -85,7 +92,7 @@ class SpendHikeLogo extends StatelessWidget {
           style: TextStyle(
             fontSize: fontSize,
             fontWeight: FontWeight.w800,
-            color: textColor,
+            color: effectiveTextColor,
             letterSpacing: -0.5,
           ),
         ),

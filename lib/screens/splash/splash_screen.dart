@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../../services/app_settings.dart';
 import '../../widgets/spend_hike_logo.dart';
 import '../auth/login_screen.dart';
 
@@ -110,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                 // Tagline
                 Text(
-                  'Smart Ledger. Clear Insights.',
+                  AppSettings.instance.tr('Smart Ledger. Clear Insights.'),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -140,7 +141,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Loading...',
+                          AppSettings.instance.tr('Loading...'),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,

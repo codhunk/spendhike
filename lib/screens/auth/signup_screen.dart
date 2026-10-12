@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../config/app_theme.dart';
 import '../../services/api_service.dart';
+import '../../services/app_settings.dart';
+import '../../widgets/language_switcher.dart';
 import '../../widgets/spend_hike_logo.dart';
+import '../../widgets/theme_switcher.dart';
 import 'create_passcode_screen.dart';
 
 
@@ -20,6 +24,8 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _obscurePassword = true;
   bool _agreedToTerms = false;
 
+  String _tr(String text) => AppSettings.instance.tr(text);
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -34,98 +40,117 @@ class _SignupScreenState extends State<SignupScreen> {
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width > 900;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FF), // background
-      body: Stack(
-        children: [
-          // Visual Polish: Corner Decoration (Desktop only)
-          if (isDesktop) ...[
-            Positioned(
-              top: 32,
-              right: 32,
-              child: Opacity(
-                opacity: 0.2,
-                child: Container(
-                  width: 256,
-                  height: 256,
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      top: BorderSide(color: Color(0xFF0453CD), width: 4),
-                      right: BorderSide(color: Color(0xFF0453CD), width: 4),
+    return ListenableBuilder(
+      listenable: AppSettings.instance,
+      builder: (context, _) {
+        final colors = AppTheme.of(context);
+        return Scaffold(
+          backgroundColor: colors.background,
+          body: Stack(
+            children: [
+              const Positioned(
+                top: 16,
+                right: 16,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ThemeSwitcherButton(),
+                    SizedBox(width: 8),
+                    LanguageSwitcherButton(),
+                  ],
+                ),
+              ),
+              // Visual Polish: Corner Decoration (Desktop only)
+            if (isDesktop) ...[
+              Positioned(
+                top: 32,
+                right: 32,
+                child: Opacity(
+                  opacity: 0.15,
+                  child: Container(
+                    width: 256,
+                    height: 256,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: colors.primary, width: 4),
+                        right: BorderSide(color: colors.primary, width: 4),
+                      ),
+                      borderRadius: const BorderRadius.only(topRight: Radius.circular(24)),
                     ),
-                    borderRadius: BorderRadius.only(topRight: Radius.circular(24)),
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              bottom: 32,
-              left: 32,
-              child: Opacity(
-                opacity: 0.2,
-                child: Container(
-                  width: 256,
-                  height: 256,
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Color(0xFF041627), width: 4),
-                      left: BorderSide(color: Color(0xFF041627), width: 4),
+              Positioned(
+                bottom: 32,
+                left: 32,
+                child: Opacity(
+                  opacity: 0.15,
+                  child: Container(
+                    width: 256,
+                    height: 256,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: colors.border, width: 4),
+                        left: BorderSide(color: colors.border, width: 4),
+                      ),
+                      borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(24)),
                     ),
-                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24)),
+                  ),
+                ),
+              ),
+            ],
+            
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 512),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: 32),
+                      _buildSignupForm(),
+                      const SizedBox(height: 32),
+                      _buildFooter(),
+                    ],
                   ),
                 ),
               ),
             ),
           ],
-          
-          Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 512),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildHeader(),
-                    const SizedBox(height: 32),
-                    _buildSignupForm(),
-                    const SizedBox(height: 32),
-                    _buildFooter(),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      );
+    },
     );
   }
 
   Widget _buildHeader() {
+    final colors = AppTheme.of(context);
     return Column(
       children: [
-        const SpendHikeIcon(
+        SpendHikeIcon(
           size: 64,
-          walletColor: Color(0xFF041627),
-          arrowColor: Color(0xFF0066FF),
+          walletColor: colors.textPrimary,
+          arrowColor: colors.primary,
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Create your account',
+        Text(
+          _tr('Create your account'),
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF041627),
+            color: colors.textPrimary,
             letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Join SpendHike to start managing your complex financial data with precision.',
+        Text(
+          _tr('Join SpendHike to start managing your complex financial data with precision.'),
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 16,
-            color: Color(0xFF44474C), // on-surface-variant
+            color: colors.textSecondary,
           ),
         ),
       ],
@@ -137,15 +162,16 @@ class _SignupScreenState extends State<SignupScreen> {
   String? _errorMessage;
 
   Widget _buildSignupForm() {
+    final colors = AppTheme.of(context);
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFC4C6CD)),
+        border: Border.all(color: colors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -180,55 +206,55 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 16),
             ],
             _buildTextField(
-              label: 'FULL NAME',
-              hint: 'Enter your full name',
+              label: _tr('FULL NAME'),
+              hint: _tr('Enter your full name'),
               icon: Icons.person_outline,
               controller: _nameController,
               validator: (val) {
                 final clean = (val ?? '').trim();
-                if (clean.isEmpty) return 'Please enter your full name';
-                if (clean.length < 2) return 'Name must be at least 2 characters long';
+                if (clean.isEmpty) return _tr('Please enter your full name');
+                if (clean.length < 2) return _tr('Name must be at least 2 characters long');
                 return null;
               },
             ),
             const SizedBox(height: 24),
             _buildTextField(
-              label: 'MOBILE NUMBER',
-              hint: '10-digit mobile number (e.g. 9876543210)',
+              label: _tr('MOBILE NUMBER'),
+              hint: _tr('10-digit mobile number'),
               icon: Icons.smartphone_outlined,
               controller: _mobileController,
               validator: (val) {
                 final clean = (val ?? '').replaceAll(RegExp(r'\D'), '');
-                if (clean.isEmpty) return 'Please enter your mobile number';
-                if (clean.length != 10) return 'Mobile number must be exactly 10 digits';
+                if (clean.isEmpty) return _tr('Please enter your mobile number');
+                if (clean.length != 10) return _tr('Please enter a valid 10-digit mobile number');
                 return null;
               },
             ),
             const SizedBox(height: 24),
             _buildTextField(
-              label: 'EMAIL ADDRESS',
+              label: _tr('EMAIL ADDRESS'),
               hint: 'name@company.com',
               icon: Icons.mail_outline,
               controller: _emailController,
               validator: (val) {
                 final clean = (val ?? '').trim();
-                if (clean.isEmpty) return 'Please enter your email address';
+                if (clean.isEmpty) return _tr('Please enter your email address');
                 final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-                if (!emailRegex.hasMatch(clean)) return 'Please enter a valid email address';
+                if (!emailRegex.hasMatch(clean)) return _tr('Please enter a valid email address');
                 return null;
               },
             ),
             const SizedBox(height: 24),
             _buildTextField(
-              label: 'PASSWORD',
-              hint: 'Create a strong password (min. 6 characters)',
+              label: _tr('PASSWORD'),
+              hint: _tr('Create a strong password'),
               icon: Icons.lock_outline,
               isPassword: true,
               controller: _passwordController,
               validator: (val) {
                 final clean = (val ?? '').trim();
-                if (clean.isEmpty) return 'Please enter a password';
-                if (clean.length < 6) return 'Password must be at least 6 characters long';
+                if (clean.isEmpty) return _tr('Please enter your password');
+                if (clean.length < 6) return _tr('Password must be at least 6 characters long');
                 return null;
               },
             ),
@@ -243,30 +269,30 @@ class _SignupScreenState extends State<SignupScreen> {
                       _agreedToTerms = val ?? false;
                     });
                   },
-                  activeColor: const Color(0xFF0453CD),
+                  activeColor: colors.primary,
                 ),
                 Expanded(
                   child: Wrap(
                     children: [
-                      const Text('I agree to the ', style: TextStyle(color: Color(0xFF44474C), fontSize: 14)),
+                      Text(_tr('I agree to the '), style: TextStyle(color: colors.textSecondary, fontSize: 14)),
                       GestureDetector(
                         onTap: () => _showPolicyDialog(
                           title: 'Terms & Conditions',
                           icon: Icons.gavel_outlined,
                           content: 'By using SpendHike, you agree to our terms of service. SpendHike provides financial tracking tools and is not a licensed financial advisor. You are responsible for maintaining the confidentiality of your account credentials. These terms are governed by the laws of India.\n\nContact: legal@spendhike.com',
                         ),
-                        child: const Text('Terms & Conditions', style: TextStyle(color: Color(0xFF0453CD), fontWeight: FontWeight.bold, fontSize: 14)),
+                        child: Text(_tr('Terms & Conditions'), style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
                       ),
-                      const Text(' and ', style: TextStyle(color: Color(0xFF44474C), fontSize: 14)),
+                      Text(_tr(' and '), style: TextStyle(color: colors.textSecondary, fontSize: 14)),
                       GestureDetector(
                         onTap: () => _showPolicyDialog(
                           title: 'Privacy Policy',
                           icon: Icons.privacy_tip_outlined,
                           content: 'SpendHike is committed to protecting your privacy. We collect personal information such as name, email, mobile number, and financial transaction data. All data is encrypted using AES-256. We never sell your personal data to third parties.\n\nContact: privacy@spendhike.com',
                         ),
-                        child: const Text('Privacy Policy', style: TextStyle(color: Color(0xFF0453CD), fontWeight: FontWeight.bold, fontSize: 14)),
+                        child: Text(_tr('Privacy Policy'), style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
                       ),
-                      const Text('.', style: TextStyle(color: Color(0xFF44474C), fontSize: 14)),
+                      Text('.', style: TextStyle(color: colors.textSecondary, fontSize: 14)),
                     ],
                   ),
                 ),
@@ -281,7 +307,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       if (!_formKey.currentState!.validate()) return;
                       if (!_agreedToTerms) {
                         setState(() {
-                          _errorMessage = 'You must agree to the Terms & Conditions and Privacy Policy.';
+                          _errorMessage = _tr('You must agree to the Terms & Conditions and Privacy Policy.');
                         });
                         return;
                       }
@@ -297,9 +323,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
                       if (res['success'] == true && mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Account created successfully! Welcome to SpendHike.'),
-                            backgroundColor: Color(0xFF10b981),
+                          SnackBar(
+                            content: Text(_tr('Account created successfully! Welcome to SpendHike.')),
+                            backgroundColor: const Color(0xFF10b981),
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
@@ -310,12 +336,12 @@ class _SignupScreenState extends State<SignupScreen> {
 
                       } else if (mounted) {
                         setState(() {
-                          _errorMessage = res['message'] ?? 'Signup failed. Please try again.';
+                          _errorMessage = _tr(res['message'] ?? 'Signup failed. Please try again.');
                         });
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0453CD),
+                backgroundColor: colors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -327,31 +353,31 @@ class _SignupScreenState extends State<SignupScreen> {
                       width: 20,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                     )
-                  : const Row(
+                  : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                        SizedBox(width: 8),
-                        Icon(Icons.arrow_forward, size: 20),
+                        Text(_tr('Sign Up'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward, size: 20),
                       ],
                     ),
             ),
           const SizedBox(height: 32),
           Row(
             children: [
-              const Expanded(child: Divider(color: Color(0xFFC4C6CD))),
+              Expanded(child: Divider(color: colors.border)),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  'OR CONTINUE WITH',
+                  _tr('OR CONTINUE WITH'),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF44474C), // on-surface-variant
+                    color: colors.textSecondary,
                   ),
                 ),
               ),
-              const Expanded(child: Divider(color: Color(0xFFC4C6CD))),
+              Expanded(child: Divider(color: colors.border)),
             ],
           ),
           const SizedBox(height: 32),
@@ -386,15 +412,16 @@ class _SignupScreenState extends State<SignupScreen> {
     TextEditingController? controller,
     String? Function(String?)? validator,
   }) {
+    final colors = AppTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF44474C), // on-surface-variant
+            color: colors.textPrimary,
             letterSpacing: 1.2,
           ),
         ),
@@ -403,15 +430,16 @@ class _SignupScreenState extends State<SignupScreen> {
           controller: controller,
           obscureText: isPassword && _obscurePassword,
           validator: validator,
+          style: TextStyle(color: colors.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: const Color(0xFF74777D).withOpacity(0.5)),
-            prefixIcon: Icon(icon, color: const Color(0xFF74777D)),
+            hintStyle: TextStyle(color: colors.textMuted),
+            prefixIcon: Icon(icon, color: colors.textSecondary),
             suffixIcon: isPassword
                 ? IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                      color: const Color(0xFF74777D),
+                      color: colors.textSecondary,
                     ),
                     onPressed: () {
                       setState(() {
@@ -421,14 +449,14 @@ class _SignupScreenState extends State<SignupScreen> {
                   )
                 : null,
             filled: true,
-            fillColor: Colors.white,
+            fillColor: colors.surfaceSubtle,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFC4C6CD)),
+              borderSide: BorderSide(color: colors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF0453CD), width: 2),
+              borderSide: BorderSide(color: colors.primary, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           ),
@@ -438,16 +466,17 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Widget _buildSocialButton({required String imageUrl, required String label}) {
+    final colors = AppTheme.of(context);
     return OutlinedButton(
       onPressed: () {},
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        backgroundColor: Colors.white,
-        side: const BorderSide(color: Color(0xFFC4C6CD)),
+        backgroundColor: colors.surfaceSubtle,
+        side: BorderSide(color: colors.border),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        foregroundColor: const Color(0xFF0B1C30),
+        foregroundColor: colors.textPrimary,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -456,7 +485,7 @@ class _SignupScreenState extends State<SignupScreen> {
           const SizedBox(width: 8),
           Text(
             label,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
           ),
         ],
       ),
@@ -464,21 +493,22 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Widget _buildFooter() {
+    final colors = AppTheme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-          "Already have an account? ",
-          style: TextStyle(color: Color(0xFF44474C)),
+        Text(
+          _tr("Already have an account? "),
+          style: TextStyle(color: colors.textSecondary),
         ),
         GestureDetector(
           onTap: () {
             Navigator.pushReplacementNamed(context, '/login');
           },
-          child: const Text(
-            'Login',
+          child: Text(
+            _tr('Login'),
             style: TextStyle(
-              color: Color(0xFF0453CD),
+              color: colors.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -492,9 +522,11 @@ class _SignupScreenState extends State<SignupScreen> {
     required IconData icon,
     required String content,
   }) {
+    final colors = AppTheme.of(context);
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
+        backgroundColor: colors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500, maxHeight: 500),
@@ -502,22 +534,22 @@ class _SignupScreenState extends State<SignupScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEFF4FF),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                decoration: BoxDecoration(
+                  color: colors.surfaceSubtle,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 ),
                 child: Row(
                   children: [
-                    Icon(icon, color: const Color(0xFF0453CD), size: 28),
+                    Icon(icon, color: colors.primary, size: 28),
                     const SizedBox(width: 12),
-                    Text(title,
-                        style: const TextStyle(
+                    Text(_tr(title),
+                        style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF041627))),
+                            color: colors.textPrimary)),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Color(0xFF44474C)),
+                      icon: Icon(Icons.close, color: colors.textSecondary),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
@@ -527,8 +559,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: Text(content,
-                      style: const TextStyle(
-                          fontSize: 14, color: Color(0xFF44474C), height: 1.6)),
+                      style: TextStyle(
+                          fontSize: 14, color: colors.textSecondary, height: 1.6)),
                 ),
               ),
               Padding(
@@ -538,12 +570,12 @@ class _SignupScreenState extends State<SignupScreen> {
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0453CD),
+                      backgroundColor: colors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8)),
                     ),
-                    child: const Text('I Understand'),
+                    child: Text(_tr('I Understand')),
                   ),
                 ),
               ),

@@ -5,6 +5,7 @@ import '../../models/app_models.dart';
 import '../../services/api_service.dart';
 import '../../services/app_settings.dart';
 import '../../services/data_sync_notifier.dart';
+import '../../config/app_theme.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -104,6 +105,7 @@ class _ReportsScreenState extends State<ReportsScreen>
   }
 
   Widget _buildHeader(BuildContext context) {
+    final colors = AppTheme.of(context);
     final isDesktop = MediaQuery.of(context).size.width > 700;
 
     return Flex(
@@ -116,21 +118,21 @@ class _ReportsScreenState extends State<ReportsScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'FINANCIAL ANALYSIS',
+              _tr('FINANCIAL ANALYSIS'),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF0453CD),
+                color: colors.primary,
                 letterSpacing: 1.5,
               ),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               _tr('Financial Analytics & Reports'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF041627),
+                color: colors.textPrimary,
               ),
             ),
           ],
@@ -143,18 +145,18 @@ class _ReportsScreenState extends State<ReportsScreen>
             OutlinedButton.icon(
               onPressed: () => _downloadReport('PDF'),
               icon: const Icon(Icons.picture_as_pdf, color: Color(0xFFef4444), size: 18),
-              label: const Text('Export PDF', style: TextStyle(color: Color(0xFF041627))),
+              label: Text(_tr('Export PDF'), style: TextStyle(color: colors.textPrimary)),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF74777D)),
+                side: BorderSide(color: colors.border),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
             ElevatedButton.icon(
               onPressed: () => _downloadReport('Excel'),
               icon: const Icon(Icons.table_view, color: Colors.white, size: 18),
-              label: const Text('Export Excel', style: TextStyle(color: Colors.white)),
+              label: Text(_tr('Export Excel'), style: const TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0453CD),
+                backgroundColor: colors.primary,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
@@ -176,6 +178,7 @@ class _ReportsScreenState extends State<ReportsScreen>
     if (!mounted) return;
 
     if (content != null && content.isNotEmpty) {
+      final colors = AppTheme.of(context);
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -204,9 +207,9 @@ class _ReportsScreenState extends State<ReportsScreen>
                 width: double.maxFinite,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: colors.surfaceSubtle,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                  border: Border.all(color: colors.border),
                 ),
                 child: SingleChildScrollView(
                   child: Text(
@@ -236,7 +239,7 @@ class _ReportsScreenState extends State<ReportsScreen>
               icon: const Icon(Icons.download, size: 16),
               label: const Text('Download File'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0453CD),
+                backgroundColor: colors.primary,
                 foregroundColor: Colors.white,
               ),
             ),
@@ -263,36 +266,38 @@ class _ReportsScreenState extends State<ReportsScreen>
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(flex: 7, child: _buildProfitLossSummary(report)),
+              Expanded(flex: 7, child: _buildProfitLossSummary(context, report)),
               const SizedBox(width: 24),
-              Expanded(flex: 5, child: _buildExpenseCategories(report)),
+              Expanded(flex: 5, child: _buildExpenseCategories(context, report)),
             ],
           )
         else ...[
-          _buildProfitLossSummary(report),
+          _buildProfitLossSummary(context, report),
           const SizedBox(height: 24),
-          _buildExpenseCategories(report),
+          _buildExpenseCategories(context, report),
         ],
         const SizedBox(height: 24),
-        _buildTransactionTable(report),
+        _buildTransactionTable(context, report),
       ],
     );
   }
 
-  Widget _buildGlassCard({
+  Widget _buildGlassCard(
+    BuildContext context, {
     required Widget child,
     EdgeInsetsGeometry padding = const EdgeInsets.all(24),
   }) {
+    final colors = AppTheme.of(context);
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6,
+            color: Colors.black.withOpacity(colors.isDark ? 0.2 : 0.04),
+            blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
@@ -301,8 +306,10 @@ class _ReportsScreenState extends State<ReportsScreen>
     );
   }
 
-  Widget _buildProfitLossSummary(ReportModel report) {
+  Widget _buildProfitLossSummary(BuildContext context, ReportModel report) {
+    final colors = AppTheme.of(context);
     return _buildGlassCard(
+      context,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -312,12 +319,12 @@ class _ReportsScreenState extends State<ReportsScreen>
             spacing: 12,
             runSpacing: 8,
             children: [
-              const Text(
-                'Profit & Loss Summary',
+              Text(
+                _tr('Profit & Loss Summary'),
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF041627)),
+                    color: colors.textPrimary),
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -329,11 +336,11 @@ class _ReportsScreenState extends State<ReportsScreen>
                         color: Color(0xFF10b981), shape: BoxShape.circle),
                   ),
                   const SizedBox(width: 4),
-                  const Text('Income',
+                  Text(_tr('Income'),
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF44474C))),
+                          color: colors.textSecondary)),
                   const SizedBox(width: 16),
                   Container(
                     width: 12,
@@ -342,11 +349,11 @@ class _ReportsScreenState extends State<ReportsScreen>
                         color: Color(0xFFef4444), shape: BoxShape.circle),
                   ),
                   const SizedBox(width: 4),
-                  const Text('Expenses',
+                  Text(_tr('Expenses'),
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF44474C))),
+                          color: colors.textSecondary)),
                 ],
               ),
             ],
@@ -361,7 +368,8 @@ class _ReportsScreenState extends State<ReportsScreen>
                   Expanded(
                     flex: isWide ? 1 : 0,
                     child: _buildStatBox(
-                      title: 'Total Income',
+                      context,
+                      title: _tr('Total Income'),
                       amount: report.totalIncome,
                       amountColor: const Color(0xFF10b981),
                       trendText: '${report.incomeTrend} this period',
@@ -373,7 +381,8 @@ class _ReportsScreenState extends State<ReportsScreen>
                   Expanded(
                     flex: isWide ? 1 : 0,
                     child: _buildStatBox(
-                      title: 'Total Expenses',
+                      context,
+                      title: _tr('Total Expenses'),
                       amount: report.totalExpenses,
                       amountColor: const Color(0xFFef4444),
                       trendText: '${report.expenseTrend} this period',
@@ -390,7 +399,7 @@ class _ReportsScreenState extends State<ReportsScreen>
             height: 220,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFFD3E4FE),
+              color: colors.surfaceSubtle,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Stack(
@@ -413,14 +422,14 @@ class _ReportsScreenState extends State<ReportsScreen>
                   right: 16,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text('JAN', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0453CD))),
-                      Text('FEB', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0453CD))),
-                      Text('MAR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0453CD))),
-                      Text('APR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0453CD))),
-                      Text('MAY', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0453CD))),
-                      Text('JUN', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0453CD))),
-                      Text('JUL', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0453CD))),
+                    children: [
+                      Text('JAN', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colors.primary)),
+                      Text('FEB', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colors.primary)),
+                      Text('MAR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colors.primary)),
+                      Text('APR', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colors.primary)),
+                      Text('MAY', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colors.primary)),
+                      Text('JUN', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colors.primary)),
+                      Text('JUL', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colors.primary)),
                     ],
                   ),
                 ),
@@ -432,27 +441,29 @@ class _ReportsScreenState extends State<ReportsScreen>
     );
   }
 
-  Widget _buildStatBox({
+  Widget _buildStatBox(
+    BuildContext context, {
     required String title,
     required String amount,
     required Color amountColor,
     required String trendText,
     required IconData trendIcon,
   }) {
+    final colors = AppTheme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF4FF),
+        color: colors.surfaceSubtle,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF44474C))),
+                  color: colors.textSecondary)),
           const SizedBox(height: 4),
           Text(amount,
               style: TextStyle(
@@ -478,7 +489,8 @@ class _ReportsScreenState extends State<ReportsScreen>
 
   // ─── Expense Categories – Large Animated Donut Chart ──────────────────────────
 
-  Widget _buildExpenseCategories(ReportModel report) {
+  Widget _buildExpenseCategories(BuildContext context, ReportModel report) {
+    final colors = AppTheme.of(context);
     final List<Color> categoryColors = [
       const Color(0xFF0453CD), // Royal Blue
       const Color(0xFF10B981), // Emerald Green
@@ -509,23 +521,24 @@ class _ReportsScreenState extends State<ReportsScreen>
     final total = categories.fold<double>(0, (s, c) => s + c.value);
 
     return _buildGlassCard(
+      context,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Expense Categories',
+          Text(
+            _tr('Expense Categories'),
             style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF041627)),
+                color: colors.textPrimary),
           ),
           const SizedBox(height: 8),
           Text(
-            'Total: ₹${_formatAmount(total)}',
-            style: const TextStyle(
+            '${_tr('TOTAL')}: ₹${_formatAmount(total)}',
+            style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF44474C)),
+                color: colors.textSecondary),
           ),
           const SizedBox(height: 24),
           Center(
@@ -547,27 +560,27 @@ class _ReportsScreenState extends State<ReportsScreen>
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          'TOTAL',
+                        Text(
+                          _tr('TOTAL'),
                           style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF44474C),
+                              color: colors.textSecondary,
                               letterSpacing: 1.2),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           '₹${_formatAmount(total)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF041627)),
+                              color: colors.textPrimary),
                         ),
                         const SizedBox(height: 2),
-                        const Text(
-                          'expenses',
+                        Text(
+                          _tr('expenses'),
                           style: TextStyle(
-                              fontSize: 12, color: Color(0xFF44474C)),
+                              fontSize: 12, color: colors.textSecondary),
                         ),
                       ],
                     ),
@@ -580,6 +593,7 @@ class _ReportsScreenState extends State<ReportsScreen>
           ...categories.map((cat) => Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: _buildCategoryLegendItem(
+                  context,
                   cat.label,
                   '₹${_formatAmount(cat.value)}',
                   cat.color,
@@ -592,7 +606,8 @@ class _ReportsScreenState extends State<ReportsScreen>
   }
 
   Widget _buildCategoryLegendItem(
-      String label, String amount, Color color, double fraction) {
+      BuildContext context, String label, String amount, Color color, double fraction) {
+    final colors = AppTheme.of(context);
     final double safeFraction =
         (fraction.isFinite && !fraction.isNaN) ? fraction.clamp(0.0, 1.0) : 0.0;
 
@@ -611,14 +626,14 @@ class _ReportsScreenState extends State<ReportsScreen>
                       color: color, borderRadius: BorderRadius.circular(3)),
                 ),
                 const SizedBox(width: 12),
-                Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: colors.textPrimary)),
               ],
             ),
             Text(amount,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF44474C))),
+                    color: colors.textSecondary)),
           ],
         ),
         const SizedBox(height: 6),
@@ -630,7 +645,7 @@ class _ReportsScreenState extends State<ReportsScreen>
               final progressVal = (safeFraction * _animation.value).clamp(0.0, 1.0);
               return LinearProgressIndicator(
                 value: progressVal.isFinite ? progressVal : 0.0,
-                backgroundColor: const Color(0xFFE5EEFF),
+                backgroundColor: colors.surfaceSubtle,
                 valueColor: AlwaysStoppedAnimation<Color>(color),
                 minHeight: 6,
               );
@@ -641,7 +656,8 @@ class _ReportsScreenState extends State<ReportsScreen>
     );
   }
 
-  Widget _buildTransactionTable(ReportModel report) {
+  Widget _buildTransactionTable(BuildContext context, ReportModel report) {
+    final colors = AppTheme.of(context);
     final rawRows = report.transactionBreakdown.isNotEmpty
         ? report.transactionBreakdown
         : [
@@ -690,15 +706,16 @@ class _ReportsScreenState extends State<ReportsScreen>
     }).toList();
 
     return _buildGlassCard(
+      context,
       padding: EdgeInsets.zero,
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Color(0xFFEFF4FF),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-              border: Border(bottom: BorderSide(color: Color(0xFFC4C6CD))),
+            decoration: BoxDecoration(
+              color: colors.surfaceSubtle,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              border: Border(bottom: BorderSide(color: colors.border)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -709,23 +726,23 @@ class _ReportsScreenState extends State<ReportsScreen>
                   spacing: 12,
                   runSpacing: 8,
                   children: [
-                    const Text(
-                      'Transaction Breakdown',
+                    Text(
+                      _tr('Transaction Breakdown'),
                       style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF041627)),
+                          color: colors.textPrimary),
                     ),
                     Container(
                       padding:
                           const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF041627),
+                        color: colors.primary,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Text(
-                        'CURRENT PERIOD',
-                        style: TextStyle(
+                      child: Text(
+                        _tr('CURRENT PERIOD'),
+                        style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -741,21 +758,21 @@ class _ReportsScreenState extends State<ReportsScreen>
                     children: [
                       FilterChip(
                         selected: _selectedFilter == ResponsiveUtils.filterAll,
-                        label: const Text('All Breakdown', style: TextStyle(fontSize: 11)),
+                        label: Text(_tr('All Breakdown'), style: const TextStyle(fontSize: 11)),
                         onSelected: (_) => setState(() => _selectedFilter = ResponsiveUtils.filterAll),
                       ),
                       const SizedBox(width: 8),
                       FilterChip(
                         selected: _selectedFilter == ResponsiveUtils.filterReceived,
                         avatar: const Icon(Icons.arrow_downward, size: 12, color: Color(0xFF10B981)),
-                        label: const Text('Received (+)', style: TextStyle(fontSize: 11)),
+                        label: Text(_tr('Received (+)'), style: const TextStyle(fontSize: 11)),
                         onSelected: (_) => setState(() => _selectedFilter = ResponsiveUtils.filterReceived),
                       ),
                       const SizedBox(width: 8),
                       FilterChip(
                         selected: _selectedFilter == ResponsiveUtils.filterSpent,
                         avatar: const Icon(Icons.arrow_upward, size: 12, color: Color(0xFFEF4444)),
-                        label: const Text('Spent (-)', style: TextStyle(fontSize: 11)),
+                        label: Text(_tr('Spent (-)'), style: const TextStyle(fontSize: 11)),
                         onSelected: (_) => setState(() => _selectedFilter = ResponsiveUtils.filterSpent),
                       ),
                     ],
@@ -768,28 +785,28 @@ class _ReportsScreenState extends State<ReportsScreen>
             scrollDirection: Axis.horizontal,
             child: DataTable(
               headingRowColor:
-                  WidgetStateProperty.all(const Color(0xFFE5EEFF)),
-              columns: const [
+                  WidgetStateProperty.all(colors.surfaceSubtle),
+              columns: [
                 DataColumn(
-                    label: Text('CATEGORY',
+                    label: Text(_tr('CATEGORY'),
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF44474C)))),
+                            color: colors.textSecondary))),
                 DataColumn(
-                    label: Text('CURRENT PERIOD',
+                    label: Text(_tr('CURRENT PERIOD'),
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF44474C)))),
+                            color: colors.textSecondary))),
                 DataColumn(
-                    label: Text('PREVIOUS PERIOD',
+                    label: Text(_tr('PREVIOUS PERIOD'),
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF44474C)))),
+                            color: colors.textSecondary))),
                 DataColumn(
-                    label: Text('VARIANCE',
+                    label: Text(_tr('VARIANCE'),
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF44474C)))),
+                            color: colors.textSecondary))),
               ],
               rows: rowsData.map((item) {
                 final category = item['category']?.toString() ?? 'General Expense';
@@ -808,6 +825,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                 }
 
                 return _buildTableRow(
+                  context,
                   category,
                   icon,
                   current,
@@ -823,8 +841,9 @@ class _ReportsScreenState extends State<ReportsScreen>
     );
   }
 
-  DataRow _buildTableRow(String category, IconData icon, String current,
+  DataRow _buildTableRow(BuildContext context, String category, IconData icon, String current,
       String previous, String variance, Color varianceColor) {
+    final colors = AppTheme.of(context);
     return DataRow(
       cells: [
         DataCell(Row(
@@ -832,19 +851,19 @@ class _ReportsScreenState extends State<ReportsScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: const Color(0xFFDAE2FF),
+                color: colors.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: const Color(0xFF0453CD), size: 18),
+              child: Icon(icon, color: colors.primary, size: 18),
             ),
             const SizedBox(width: 12),
-            Text(category),
+            Text(category, style: TextStyle(color: colors.textPrimary)),
           ],
         )),
         DataCell(Text(current,
-            style: const TextStyle(fontWeight: FontWeight.w600))),
+            style: TextStyle(fontWeight: FontWeight.w600, color: colors.textPrimary))),
         DataCell(Text(previous,
-            style: const TextStyle(color: Color(0xFF74777D)))),
+            style: TextStyle(color: colors.textMuted))),
         DataCell(Text(variance,
             style:
                 TextStyle(fontWeight: FontWeight.bold, color: varianceColor))),
@@ -888,18 +907,18 @@ class _ReportsScreenState extends State<ReportsScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               Text(
-                'Automated Forecasts',
-                style: TextStyle(
+                _tr('Automated Forecasts'),
+                style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
-                'Based on current trends, your projected income for Q4 is expected to rise by 15.2% due to operational efficiency.',
-                style: TextStyle(fontSize: 14, color: Colors.white70),
+                _tr('Based on current trends, your projected income for Q4 is expected to rise by 15.2% due to operational efficiency.'),
+                style: const TextStyle(fontSize: 14, color: Colors.white70),
               ),
             ],
           ),
@@ -933,7 +952,7 @@ class _ReportsScreenState extends State<ReportsScreen>
               color: Colors.white,
             ),
             const SizedBox(width: 12),
-            Text('Exporting report as $format...'),
+            Text('${_tr('Exporting report as')} $format...'),
           ],
         ),
         backgroundColor: const Color(0xFF041627),

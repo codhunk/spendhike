@@ -4,6 +4,7 @@ import '../../services/api_service.dart';
 import '../../services/app_settings.dart';
 import '../../services/data_sync_notifier.dart';
 import '../../services/share_service.dart';
+import '../../config/app_theme.dart';
 import 'group_detail_screen.dart';
 
 class GroupsScreen extends StatefulWidget {
@@ -36,32 +37,38 @@ class _GroupsScreenState extends State<GroupsScreen> {
   String _tr(String text) => AppSettings.instance.tr(text);
 
   void _showCreateGroupDialog() {
+    final colors = AppTheme.of(context);
     final titleController = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.group_add, color: Color(0xFF0453CD)),
-            SizedBox(width: 12),
-            Text('Create New Group Ledger',style: TextStyle(fontSize:16,fontWeight:FontWeight.bold)),
+            Icon(Icons.group_add, color: colors.primary),
+            const SizedBox(width: 12),
+            Text(_tr('Create New Group Ledger'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary)),
           ],
         ),
         content: TextField(
           controller: titleController,
           autofocus: true,
+          style: TextStyle(color: colors.textPrimary),
           decoration: InputDecoration(
-            labelText: 'Group / Site Name',
-            hintText: 'e.g. Site B - Commercia  l Plaza',
-            prefixIcon: const Icon(Icons.apartment, color: Color(0xFF0453CD)),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            labelText: _tr('Group / Site Name'),
+            labelStyle: TextStyle(color: colors.textSecondary),
+            hintText: AppSettings.instance.isHindi ? 'उदा. साइट B - कमर्शियल प्लाजा' : 'e.g. Site B - Commercial Plaza',
+            hintStyle: TextStyle(color: colors.textMuted),
+            prefixIcon: Icon(Icons.apartment, color: colors.primary),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: colors.border)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: colors.border)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: colors.primary, width: 2)),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF74777D))),
+            child: Text(_tr('Cancel'), style: TextStyle(color: colors.textMuted)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -73,11 +80,11 @@ class _GroupsScreenState extends State<GroupsScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0453CD),
+              backgroundColor: colors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('Create'),
+            child: Text(_tr('Create')),
           ),
         ],
       ),
@@ -85,36 +92,42 @@ class _GroupsScreenState extends State<GroupsScreen> {
   }
 
   void _showJoinGroupDialog() {
+    final colors = AppTheme.of(context);
     final codeController = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.group_add, color: Color(0xFF0453CD)),
-            SizedBox(width: 12),
-            Text('Join Group Ledger', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Icon(Icons.group_add, color: colors.primary),
+            const SizedBox(width: 12),
+            Text(_tr('Join Group Ledger'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Enter the Invitation Code shared by your project admin (e.g. INV-A1B2C3):',
-              style: TextStyle(fontSize: 13, color: Color(0xFF44474C)),
+            Text(
+              _tr('Enter the Invitation Code shared by your project admin (e.g. INV-A1B2C3):'),
+              style: TextStyle(fontSize: 13, color: colors.textSecondary),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: codeController,
               autofocus: true,
               textCapitalization: TextCapitalization.characters,
+              style: TextStyle(color: colors.textPrimary),
               decoration: InputDecoration(
-                labelText: 'Invitation Code',
+                labelText: _tr('Invitation Code'),
+                labelStyle: TextStyle(color: colors.textSecondary),
                 hintText: 'e.g. INV-98A7B6',
-                prefixIcon: const Icon(Icons.key, color: Color(0xFF0453CD)),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                hintStyle: TextStyle(color: colors.textMuted),
+                prefixIcon: Icon(Icons.key, color: colors.primary),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.primary, width: 2)),
               ),
             ),
           ],
@@ -122,7 +135,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF74777D))),
+            child: Text(_tr('Cancel'), style: TextStyle(color: colors.textMuted)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -133,8 +146,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(res['message'] ?? 'Successfully joined project group!'),
-                      backgroundColor: res['success'] == true ? const Color(0xFF10b981) : const Color(0xFFBA1A1A),
+                      content: Text(res['message'] ?? _tr('Successfully joined project group!')),
+                      backgroundColor: res['success'] == true ? colors.success : colors.error,
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -142,11 +155,11 @@ class _GroupsScreenState extends State<GroupsScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0453CD),
+              backgroundColor: colors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('Join Group'),
+            child: Text(_tr('Join Group')),
           ),
         ],
       ),
@@ -212,10 +225,10 @@ class _GroupsScreenState extends State<GroupsScreen> {
                         children: [
                           Text(
                             _tr('Project Ledgers'),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF041627),
+                              color: AppTheme.of(context).textPrimary,
                             ),
                           ),
                           Wrap(
@@ -225,10 +238,10 @@ class _GroupsScreenState extends State<GroupsScreen> {
                               OutlinedButton.icon(
                                 onPressed: _showJoinGroupDialog,
                                 icon: const Icon(Icons.group_add_outlined, size: 18),
-                                label: const Text('Join Group'),
+                                label: Text(_tr('Join Group')),
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: const Color(0xFF0453CD),
-                                  side: const BorderSide(color: Color(0xFF0453CD)),
+                                  foregroundColor: AppTheme.of(context).primary,
+                                  side: BorderSide(color: AppTheme.of(context).primary),
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10)),
                                 ),
@@ -236,9 +249,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                               FilledButton.icon(
                                 onPressed: _showCreateGroupDialog,
                                 icon: const Icon(Icons.add, size: 18),
-                                label: const Text('New Group'),
+                                label: Text(_tr('New Group')),
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: const Color(0xFF0453CD),
+                                  backgroundColor: AppTheme.of(context).primary,
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10)),
                                 ),
@@ -252,12 +265,12 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       // Search Bar
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppTheme.of(context).surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFC4C6CD)),
+                          border: Border.all(color: AppTheme.of(context).border),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.02),
+                              color: Colors.black.withOpacity(AppTheme.of(context).isDark ? 0.2 : 0.02),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -266,13 +279,14 @@ class _GroupsScreenState extends State<GroupsScreen> {
                         child: TextField(
                           controller: _searchController,
                           onChanged: (v) => setState(() => _searchQuery = v),
+                          style: TextStyle(color: AppTheme.of(context).textPrimary),
                           decoration: InputDecoration(
-                            hintText: 'Search groups, projects or ledgers...',
-                            hintStyle: const TextStyle(color: Color(0xFF74777D)),
-                            prefixIcon: const Icon(Icons.search, color: Color(0xFF74777D)),
+                            hintText: _tr('Search groups, projects or ledgers...'),
+                            hintStyle: TextStyle(color: AppTheme.of(context).textMuted),
+                            prefixIcon: Icon(Icons.search, color: AppTheme.of(context).textMuted),
                             suffixIcon: _searchQuery.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.clear, color: Color(0xFF74777D)),
+                                    icon: Icon(Icons.clear, color: AppTheme.of(context).textMuted),
                                     onPressed: () {
                                       _searchController.clear();
                                       setState(() => _searchQuery = '');
@@ -280,6 +294,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
                                   )
                                 : null,
                             border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
                             contentPadding:
                                 const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           ),
@@ -303,24 +319,25 @@ class _GroupsScreenState extends State<GroupsScreen> {
                                 const Icon(Icons.folder_open,
                                     size: 64, color: Color(0xFF74777D)),
                                 const SizedBox(height: 16),
-                                const Text(
-                                  'No Project Groups Found',
-                                  style: TextStyle(
+                                Text(
+                                  _tr('No Project Groups Found'),
+                                  style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600,
                                       color: Color(0xFF041627)),
                                 ),
                                 const SizedBox(height: 8),
-                                const Text(
-                                  'Create your first group ledger to track site expenses.',
-                                  style: TextStyle(
+                                Text(
+                                  _tr('Create your first group ledger to track site expenses.'),
+                                  style: const TextStyle(
                                       fontSize: 14, color: Color(0xFF74777D)),
+                                  textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 16),
                                 ElevatedButton.icon(
                                   onPressed: _showCreateGroupDialog,
                                   icon: const Icon(Icons.add, size: 12),
-                                  label: const Text('Create First Group'),
+                                  label: Text(_tr('Create First Group')),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF0453CD),
                                     foregroundColor: Colors.white,
@@ -368,6 +385,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
   // ─── Group Card ───────────────────────────────────────────────────────────────
 
   Widget _buildGroupCard(BuildContext context, GroupModel g) {
+    final colors = AppTheme.of(context);
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -382,12 +400,12 @@ class _GroupsScreenState extends State<GroupsScreen> {
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: colors.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: colors.isDark ? 0.2 : 0.04),
               blurRadius: 6,
               offset: const Offset(0, 4),
             ),
@@ -402,7 +420,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                 left: 0,
                 child: Container(
                   width: 4,
-                  color: const Color(0xFF0453CD),
+                  color: colors.primary,
                 ),
               ),
             Padding(
@@ -420,23 +438,23 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFDAE2FF),
+                    color: colors.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.construction, color: Color(0xFF0453CD)),
+                  child: Icon(Icons.construction, color: colors.primary),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE5EEFF),
+                    color: colors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    g.status,
-                    style: const TextStyle(
+                    _tr(g.status),
+                    style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF0453CD)),
+                        color: colors.primary),
                   ),
                 ),
               ],
@@ -446,59 +464,59 @@ class _GroupsScreenState extends State<GroupsScreen> {
             // ── Title + transactions ──────────────────────────────────────────
             Text(
               g.title,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF041627)),
+                  color: colors.textPrimary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 2),
             Text(
-              g.transactionsCount,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF44474C)),
+              _tr(g.transactionsCount),
+              style: TextStyle(fontSize: 13, color: colors.textSecondary),
             ),
 
             const SizedBox(height: 12),
 
             // ── Balance ──────────────────────────────────────────────────────
-            const Text(
-              'REMAINING BALANCE',
+            Text(
+              _tr('REMAINING BALANCE'),
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF74777D),
+                  color: colors.textMuted,
                   letterSpacing: 1.2),
             ),
             const SizedBox(height: 2),
             Text(
               g.balance,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF0453CD)),
+                  color: colors.primary),
             ),
 
             const SizedBox(height: 14),
-            const Divider(color: Color(0xFFE2E8F0), height: 1),
+            Divider(color: colors.border, height: 1),
             const SizedBox(height: 12),
 
             // ── Members row ──────────────────────────────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildAvatarStack(g.members
-                    .map((m) => _MemberData(m.name, m.initials, const Color(0xFF0453CD)))
+                _buildAvatarStack(context, g.members
+                    .map((m) => _MemberData(m.name, m.initials, colors.primary))
                     .toList()),
                 TextButton.icon(
                   onPressed: () => _showEditMembersSheet(context, g),
-                  icon: const Icon(Icons.edit, size: 14, color: Color(0xFF0453CD)),
-                  label: const Text(
-                    'Edit',
+                  icon: Icon(Icons.edit, size: 14, color: colors.primary),
+                  label: Text(
+                    _tr('Edit'),
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF0453CD)),
+                        color: colors.primary),
                   ),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -519,11 +537,12 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
   // ─── Overlapping Avatar Stack ─────────────────────────────────────────────────
 
-  Widget _buildAvatarStack(List<_MemberData> members) {
+  Widget _buildAvatarStack(BuildContext context, List<_MemberData> members) {
     const avatarSize = 30.0;
     const overlap = 10.0;
     final visible = members.take(4).toList();
     final extraCount = members.length - 4;
+    final surfaceColor = AppTheme.of(context).surface;
 
     return SizedBox(
       height: avatarSize,
@@ -540,7 +559,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                 decoration: BoxDecoration(
                   color: visible[i].color,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(color: surfaceColor, width: 2),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -561,7 +580,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF74777D),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(color: surfaceColor, width: 2),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -650,6 +669,7 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppTheme.of(context);
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -667,10 +687,10 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF4FF),
+                  color: colors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.group, color: Color(0xFF0453CD)),
+                child: Icon(Icons.group, color: colors.primary),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -679,28 +699,28 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
                   children: [
                     Text(
                       widget.groupName,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF041627)),
+                          color: colors.textPrimary),
                     ),
                     Text(
                       '${_members.length} member${_members.length != 1 ? 's' : ''}',
-                      style: const TextStyle(
-                          fontSize: 13, color: Color(0xFF44474C)),
+                      style: TextStyle(
+                          fontSize: 13, color: colors.textSecondary),
                     ),
                   ],
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.close, color: Color(0xFF44474C)),
+                icon: Icon(Icons.close, color: colors.textSecondary),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
 
           const SizedBox(height: 20),
-          const Divider(color: Color(0xFFE2E8F0)),
+          Divider(color: colors.border),
           const SizedBox(height: 16),
 
           // Members list
@@ -722,12 +742,12 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Add Registered Member',
+              Text(
+                AppSettings.instance.tr('Add Registered Member'),
                 style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF44474C)),
+                    color: colors.textSecondary),
               ),
               const SizedBox(height: 6),
 
@@ -736,21 +756,21 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE5EEFF),
+                    color: colors.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFF0453CD)),
+                    border: Border.all(color: colors.primary),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.check_circle, color: Color(0xFF10b981), size: 18),
+                      Icon(Icons.check_circle, color: colors.success, size: 18),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Selected: ${_selectedUser!['name']} (${_selectedUser!['email']})',
-                          style: const TextStyle(
+                          '${AppSettings.instance.tr('Selected')}: ${_selectedUser!['name']} (${_selectedUser!['email']})',
+                          style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF0453CD)),
+                              color: colors.primary),
                         ),
                       ),
                       GestureDetector(
@@ -760,7 +780,7 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
                             _nameController.clear();
                           });
                         },
-                        child: const Icon(Icons.cancel, size: 18, color: Color(0xFF74777D)),
+                        child: Icon(Icons.cancel, size: 18, color: colors.textMuted),
                       ),
                     ],
                   ),
@@ -773,27 +793,33 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
                     flex: 3,
                     child: TextField(
                       controller: _nameController,
+                      style: TextStyle(color: colors.textPrimary),
                       decoration: InputDecoration(
-                        hintText: 'Mobile No, Email ID or Name...',
+                        hintText: AppSettings.instance.tr('Mobile No, Email ID or Name...'),
+                        hintStyle: TextStyle(color: colors.textMuted),
                         prefixIcon:
-                            const Icon(Icons.person_search, color: Color(0xFF0453CD)),
+                            Icon(Icons.person_search, color: colors.primary),
                         suffixIcon: _isSearching
-                            ? const Padding(
-                                padding: EdgeInsets.all(12),
+                            ? Padding(
+                                padding: const EdgeInsets.all(12),
                                 child: SizedBox(
                                   width: 16,
                                   height: 16,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Color(0xFF0453CD)),
+                                      strokeWidth: 2, color: colors.primary),
                                 ),
                               )
                             : null,
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: colors.border)),
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: colors.border)),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide:
-                              const BorderSide(color: Color(0xFF0453CD), width: 2),
+                              BorderSide(color: colors.primary, width: 2),
                         ),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -804,17 +830,18 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFC4C6CD)),
+                      border: Border.all(color: colors.border),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
+                        dropdownColor: colors.surface,
                         value: _selectedRole,
-                        items: const [
-                          DropdownMenuItem(value: 'Admin', child: Text('Admin')),
-                          DropdownMenuItem(value: 'Manager', child: Text('Manager')),
-                          DropdownMenuItem(value: 'Editor', child: Text('Editor')),
-                          DropdownMenuItem(value: 'Viewer', child: Text('Viewer')),
+                        items: [
+                          DropdownMenuItem(value: 'Admin', child: Text(AppSettings.instance.tr('Admin'), style: TextStyle(color: colors.textPrimary))),
+                          DropdownMenuItem(value: 'Manager', child: Text(AppSettings.instance.tr('Manager'), style: TextStyle(color: colors.textPrimary))),
+                          DropdownMenuItem(value: 'Editor', child: Text(AppSettings.instance.tr('Editor'), style: TextStyle(color: colors.textPrimary))),
+                          DropdownMenuItem(value: 'Viewer', child: Text(AppSettings.instance.tr('Viewer'), style: TextStyle(color: colors.textPrimary))),
                         ],
                         onChanged: (v) {
                           if (v != null) setState(() => _selectedRole = v);
@@ -826,7 +853,7 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
                   ElevatedButton(
                     onPressed: _addMember,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0453CD),
+                      backgroundColor: colors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -842,14 +869,14 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
                   margin: const EdgeInsets.only(top: 8),
                   constraints: const BoxConstraints(maxHeight: 180),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF0453CD).withOpacity(0.3)),
-                    boxShadow: const [
+                    border: Border.all(color: colors.primary.withValues(alpha: 0.3)),
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x1A000000),
+                        color: Colors.black.withValues(alpha: colors.isDark ? 0.3 : 0.1),
                         blurRadius: 10,
-                        offset: Offset(0, 4),
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
@@ -857,7 +884,7 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
                     shrinkWrap: true,
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     itemCount: _searchResults.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                    separatorBuilder: (_, __) => Divider(height: 1, color: colors.border),
                     itemBuilder: (context, i) {
                       final user = _searchResults[i];
                       final name = user['name'] ?? '';
@@ -871,15 +898,15 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
                         dense: true,
                         leading: CircleAvatar(
                           radius: 16,
-                          backgroundColor: const Color(0xFFE5EEFF),
+                          backgroundColor: colors.primary.withValues(alpha: 0.15),
                           child: Text(
                             initials,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF0453CD)),
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: colors.primary),
                           ),
                         ),
-                        title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        subtitle: Text(email, style: const TextStyle(fontSize: 11, color: Color(0xFF44474C))),
-                        trailing: const Icon(Icons.check_circle_outline, size: 20, color: Color(0xFF0453CD)),
+                        title: Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: colors.textPrimary)),
+                        subtitle: Text(email, style: TextStyle(fontSize: 11, color: colors.textSecondary)),
+                        trailing: Icon(Icons.check_circle_outline, size: 20, color: colors.primary),
                         onTap: () {
                           setState(() {
                             _selectedUser = user;
@@ -906,8 +933,8 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                        'Members updated for ${widget.groupName}'),
-                    backgroundColor: const Color(0xFF10b981),
+                        '${AppSettings.instance.tr('Members updated for')} ${widget.groupName}'),
+                    backgroundColor: colors.success,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
@@ -915,14 +942,14 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF041627),
+                backgroundColor: colors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
-              child: const Text('Save Changes',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              child: Text(AppSettings.instance.tr('Save Changes'),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -931,13 +958,14 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
   }
 
   Widget _buildMemberTile(int index) {
+    final colors = AppTheme.of(context);
     final m = _members[index];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FF),
+        color: colors.surfaceSubtle,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: colors.border),
       ),
       child: Row(
         children: [
@@ -964,21 +992,21 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
           Expanded(
             child: Text(
               m.name,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF041627)),
+                  color: colors.textPrimary),
             ),
           ),
 
           // Edit button
           IconButton(
-            icon: const Icon(Icons.edit_outlined,
-                size: 18, color: Color(0xFF0453CD)),
-            tooltip: 'Edit ${m.name}',
+            icon: Icon(Icons.edit_outlined,
+                size: 18, color: colors.primary),
+            tooltip: '${AppSettings.instance.tr('Edit')} ${m.name}',
             onPressed: () => _showEditMemberDialog(index),
             style: IconButton.styleFrom(
-              backgroundColor: const Color(0xFFEFF4FF),
+              backgroundColor: colors.primary.withValues(alpha: 0.12),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
               padding: const EdgeInsets.all(6),
@@ -990,9 +1018,9 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
 
           // Remove button
           IconButton(
-            icon: const Icon(Icons.delete_outline,
-                size: 18, color: Color(0xFFBA1A1A)),
-            tooltip: 'Remove ${m.name}',
+            icon: Icon(Icons.delete_outline,
+                size: 18, color: colors.error),
+            tooltip: '${AppSettings.instance.tr('Remove')} ${m.name}',
             onPressed: () async {
               final target = m.id.isNotEmpty ? m.id : (m.email.isNotEmpty ? m.email : m.name);
               final removedName = m.name;
@@ -1002,15 +1030,15 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
               if (res['success'] == true) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('$removedName removed from group successfully'),
-                    backgroundColor: const Color(0xFF10b981),
+                    content: Text('$removedName ${AppSettings.instance.tr('removed from group successfully')}'),
+                    backgroundColor: colors.success,
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
               }
             },
             style: IconButton.styleFrom(
-              backgroundColor: const Color(0xFFFFDAD6),
+              backgroundColor: colors.error.withValues(alpha: 0.12),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
               padding: const EdgeInsets.all(6),
@@ -1027,9 +1055,9 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
     final query = _nameController.text.trim();
     if (query.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter Mobile Number, Email ID or Name'),
-          backgroundColor: Color(0xFFBA1A1A),
+        SnackBar(
+          content: Text(AppSettings.instance.tr('Please enter Mobile Number, Email ID or Name')),
+          backgroundColor: const Color(0xFFBA1A1A),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -1080,15 +1108,16 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
   }
 
   void _showShareInvitationDialog(String recipient, String shareMsg, String shareLink) {
+    final colors = AppTheme.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.mark_email_read, color: Color(0xFF10b981), size: 28),
-            SizedBox(width: 10),
-            Text('Invitation Created'),
+            Icon(Icons.mark_email_read, color: colors.success, size: 28),
+            const SizedBox(width: 10),
+            Text(AppSettings.instance.tr('Invitation Created'), style: TextStyle(color: colors.textPrimary)),
           ],
         ),
         content: Column(
@@ -1096,25 +1125,25 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Invitation successfully sent to $recipient.',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF041627)),
+              '${AppSettings.instance.tr('Invitation successfully sent to')} $recipient.',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.textPrimary),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'If the user is already on SpendHike, a notification has been sent to their account. If not, share this link via WhatsApp or Email:',
-              style: TextStyle(fontSize: 13, color: Color(0xFF44474C)),
+            Text(
+              AppSettings.instance.tr('If the user is already on SpendHike, a notification has been sent to their account. If not, share this link via WhatsApp or Email:'),
+              style: TextStyle(fontSize: 13, color: colors.textSecondary),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: colors.surfaceSubtle,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFC4C6CD)),
+                border: Border.all(color: colors.border),
               ),
               child: SelectableText(
                 shareMsg,
-                style: const TextStyle(fontSize: 12, fontFamily: 'monospace', color: Color(0xFF041627)),
+                style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: colors.textPrimary),
               ),
             ),
           ],
@@ -1126,7 +1155,7 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
               ShareService.shareToWhatsApp(context, shareMsg, recipient);
             },
             icon: const Icon(Icons.chat_bubble, color: Color(0xFF25D366)),
-            label: const Text('Share WhatsApp', style: TextStyle(color: Color(0xFF25D366))),
+            label: Text(AppSettings.instance.tr('Share WhatsApp'), style: const TextStyle(color: Color(0xFF25D366))),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -1134,9 +1163,9 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
               ShareService.shareToEmail(context, recipient, 'SpendHike Group Invitation', shareMsg);
             },
             icon: const Icon(Icons.email, size: 18),
-            label: const Text('Share Email'),
+            label: Text(AppSettings.instance.tr('Share Email')),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0453CD),
+              backgroundColor: colors.primary,
               foregroundColor: Colors.white,
             ),
           ),
@@ -1146,35 +1175,39 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
   }
 
   void _showEditMemberDialog(int index) {
+    final colors = AppTheme.of(context);
     final editController = TextEditingController(text: _members[index].name);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.edit, color: Color(0xFF0453CD)),
-            SizedBox(width: 10),
-            Text('Edit Member'),
+            Icon(Icons.edit, color: colors.primary),
+            const SizedBox(width: 10),
+            Text(AppSettings.instance.tr('Edit Member'), style: TextStyle(color: colors.textPrimary)),
           ],
         ),
         content: TextField(
           controller: editController,
           autofocus: true,
+          style: TextStyle(color: colors.textPrimary),
           decoration: InputDecoration(
-            labelText: 'Member Name',
-            prefixIcon: const Icon(Icons.person, color: Color(0xFF0453CD)),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            labelText: AppSettings.instance.tr('Member Name'),
+            labelStyle: TextStyle(color: colors.textSecondary),
+            prefixIcon: Icon(Icons.person, color: colors.primary),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: colors.border)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: colors.border)),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF0453CD), width: 2),
+              borderSide: BorderSide(color: colors.primary, width: 2),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF74777D))),
+            child: Text(AppSettings.instance.tr('Cancel'), style: TextStyle(color: colors.textMuted)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1192,11 +1225,11 @@ class _EditMembersSheetState extends State<_EditMembersSheet> {
               Navigator.pop(ctx);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0453CD),
+              backgroundColor: colors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('Save'),
+            child: Text(AppSettings.instance.tr('Save')),
           ),
         ],
       ),

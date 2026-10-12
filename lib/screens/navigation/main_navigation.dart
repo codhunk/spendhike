@@ -8,8 +8,11 @@ import '../dashboard/dashboard_screen.dart';
 import '../transaction/new_transaction_screen.dart';
 import '../profile/profile_screen.dart';
 import '../groups/groups_screen.dart';
-import '../reports/reports_screen.dart';
 import '../labour/labour_main_screen.dart';
+import '../reports/reports_screen.dart';
+import '../../widgets/language_switcher.dart';
+import '../../widgets/theme_switcher.dart';
+import '../../config/app_theme.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -57,8 +60,9 @@ class _MainNavigationState extends State<MainNavigation> {
     return ListenableBuilder(
       listenable: AppSettings.instance,
       builder: (context, child) {
+        final colors = AppTheme.of(context);
         return Scaffold(
-          backgroundColor: const Color(0xFFF8F9FF),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: isDesktop ? null : _buildAppBar(),
           body: isDesktop ? _buildDesktopLayout() : _buildMobileBody(),
           floatingActionButton: isDesktop
@@ -66,7 +70,7 @@ class _MainNavigationState extends State<MainNavigation> {
               : (_selectedIndex == 0 || _selectedIndex == 1)
                   ? FloatingActionButton(
                       onPressed: _openNewTransaction,
-                      backgroundColor: const Color(0xFF041627),
+                      backgroundColor: colors.primary,
                       foregroundColor: Colors.white,
                       child: const Icon(Icons.add, size: 32),
                     )
@@ -97,21 +101,22 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   Widget _buildDesktopAppBar() {
+    final colors = AppTheme.of(context);
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF8F9FF),
-        border: Border(bottom: BorderSide(color: Color(0xFFC4C6CD))),
+      decoration: BoxDecoration(
+        color: Theme.of(context).appBarTheme.backgroundColor,
+        border: Border(bottom: BorderSide(color: colors.border)),
       ),
       child: Row(
         children: [
           Text(
-            _navItems[_selectedIndex].label,
-            style: const TextStyle(
+            AppSettings.instance.tr(_navItems[_selectedIndex].label),
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF041627),
+              color: colors.textPrimary,
             ),
           ),
           const Spacer(),
@@ -119,21 +124,25 @@ class _MainNavigationState extends State<MainNavigation> {
             ElevatedButton.icon(
               onPressed: _openNewTransaction,
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('New Transaction'),
+              label: Text(AppSettings.instance.tr('New Transaction')),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF041627),
+                backgroundColor: colors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
+          const LanguageSwitcherButton(),
+          const SizedBox(width: 8),
+          const ThemeSwitcherButton(),
+          const SizedBox(width: 8),
           _buildNotificationBellIcon(),
           const SizedBox(width: 8),
           Container(
             width: 36,
             height: 36,
-            decoration: const BoxDecoration(
-              color: Color(0xFF356EE7),
+            decoration: BoxDecoration(
+              color: colors.primary,
               shape: BoxShape.circle,
             ),
             clipBehavior: Clip.antiAlias,
@@ -148,13 +157,16 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   Widget _buildSidebar() {
+    final colors = AppTheme.of(context);
+    final sidebarBg = colors.isDark ? const Color(0xFF1E293B) : const Color(0xFF041627);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
       width: _sidebarExpanded ? 260 : 72,
-      decoration: const BoxDecoration(
-        color: Color(0xFF041627),
-        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8)],
+      decoration: BoxDecoration(
+        color: sidebarBg,
+        border: colors.isDark ? Border(right: BorderSide(color: colors.border)) : null,
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 8)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,7 +213,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 controller: _searchController,
                 style: const TextStyle(color: Colors.white, fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: 'Search groups...',
+                  hintText: AppSettings.instance.tr('Search groups...'),
                   hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
                   prefixIcon: const Icon(Icons.search, color: Colors.white38, size: 18),
                   filled: true,
@@ -225,8 +237,9 @@ class _MainNavigationState extends State<MainNavigation> {
               itemBuilder: (context, index) {
                 final item = _navItems[index];
                 final isSelected = _selectedIndex == index;
+                final localizedLabel = AppSettings.instance.tr(item.label);
                 return Tooltip(
-                  message: _sidebarExpanded ? '' : item.label,
+                  message: _sidebarExpanded ? '' : localizedLabel,
                   child: InkWell(
                     onTap: () => setState(() => _selectedIndex = index),
                     child: AnimatedContainer(
@@ -250,7 +263,7 @@ class _MainNavigationState extends State<MainNavigation> {
                             const SizedBox(width: 14),
                             Expanded(
                               child: Text(
-                                item.label,
+                                localizedLabel,
                                 style: TextStyle(
                                   color: isSelected ? Colors.white : Colors.white70,
                                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -276,9 +289,9 @@ class _MainNavigationState extends State<MainNavigation> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'EXPORT REPORT',
-                    style: TextStyle(
+                  Text(
+                    AppSettings.instance.tr('EXPORT REPORT'),
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: Colors.white38,
@@ -288,14 +301,14 @@ class _MainNavigationState extends State<MainNavigation> {
                   const SizedBox(height: 8),
                   _buildSidebarExportButton(
                     icon: Icons.picture_as_pdf,
-                    label: 'Export as PDF',
+                    label: AppSettings.instance.tr('Export as PDF'),
                     color: const Color(0xFFef4444),
                     onPressed: () => _showExportSnackBar('PDF'),
                   ),
                   const SizedBox(height: 8),
                   _buildSidebarExportButton(
                     icon: Icons.table_view,
-                    label: 'Export as Excel',
+                    label: AppSettings.instance.tr('Export as Excel'),
                     color: const Color(0xFF10b981),
                     onPressed: () => _showExportSnackBar('Excel'),
                   ),
@@ -310,12 +323,12 @@ class _MainNavigationState extends State<MainNavigation> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.picture_as_pdf, color: Color(0xFFef4444), size: 22),
-                    tooltip: 'Export PDF',
+                    tooltip: AppSettings.instance.tr('Export as PDF'),
                     onPressed: () => _showExportSnackBar('PDF'),
                   ),
                   IconButton(
                     icon: const Icon(Icons.table_view, color: Color(0xFF10b981), size: 22),
-                    tooltip: 'Export Excel',
+                    tooltip: AppSettings.instance.tr('Export as Excel'),
                     onPressed: () => _showExportSnackBar('Excel'),
                   ),
                 ],
@@ -350,37 +363,30 @@ class _MainNavigationState extends State<MainNavigation> {
   // ─── Mobile Layout ────────────────────────────────────────────────────────────
 
   PreferredSizeWidget _buildAppBar() {
+    final colors = AppTheme.of(context);
     return AppBar(
-      backgroundColor: const Color(0xFFF8F9FF),
+      backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       elevation: 0,
       scrolledUnderElevation: 0,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1.0),
-        child: Container(color: const Color(0xFFC4C6CD), height: 1.0),
+        child: Container(color: colors.border, height: 1.0),
       ),
       title: const SpendHikeLogo(
         iconSize: 32,
         fontSize: 20,
-        walletColor: Color(0xFF041627),
-        arrowColor: Color(0xFF0066FF),
-        textColor: Color(0xFF041627),
       ),
       actions: [
-        TextButton.icon(
-          onPressed: () => AppSettings.instance.toggleLanguage(),
-          icon: const Icon(Icons.language, size: 18, color: Color(0xFF0453CD)),
-          label: Text(
-            AppSettings.instance.isHindi ? 'English' : 'हिन्दी',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0453CD)),
-          ),
-        ),
+        const LanguageSwitcherButton(),
+        const ThemeSwitcherButton(),
         _buildNotificationBellIcon(),
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
       ],
     );
   }
 
   Widget _buildNotificationBellIcon() {
+    final colors = AppTheme.of(context);
     return FutureBuilder<int>(
       future: ApiService.getPendingInvitationCount(),
       builder: (context, snapshot) {
@@ -389,7 +395,7 @@ class _MainNavigationState extends State<MainNavigation> {
           alignment: Alignment.center,
           children: [
             IconButton(
-              icon: const Icon(Icons.notifications_outlined, color: Color(0xFF041627)),
+              icon: Icon(Icons.notifications_outlined, color: colors.textPrimary),
               onPressed: _openNotificationsSheet,
             ),
             if (count > 0)
@@ -441,11 +447,12 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   Widget _buildBottomNavigationBar() {
+    final colors = AppTheme.of(context);
     return NavigationBar(
       selectedIndex: _selectedIndex,
       onDestinationSelected: (index) => setState(() => _selectedIndex = index),
-      backgroundColor: const Color(0xFFF8F9FF),
-      indicatorColor: const Color(0xFF356EE7),
+      backgroundColor: colors.surface,
+      indicatorColor: colors.primary,
       elevation: 8,
       destinations: [
         NavigationDestination(
@@ -504,6 +511,7 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   void _showExportSnackBar(String format) {
+    final colors = AppTheme.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -513,10 +521,10 @@ class _MainNavigationState extends State<MainNavigation> {
               color: Colors.white,
             ),
             const SizedBox(width: 12),
-            Text('Exporting report as $format...'),
+            Text(AppSettings.instance.isHindi ? '$format के रूप में रिपोर्ट निर्यात कर रहे हैं...' : 'Exporting report as $format...'),
           ],
         ),
-        backgroundColor: const Color(0xFF041627),
+        backgroundColor: colors.isDark ? colors.surfaceSubtle : const Color(0xFF041627),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 2),

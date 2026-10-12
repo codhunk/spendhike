@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../config/app_theme.dart';
 import '../../config/responsive_utils.dart';
 import '../../models/app_models.dart';
 import '../../services/api_service.dart';
+import '../../services/app_settings.dart';
+import '../../widgets/language_switcher.dart';
+import '../../widgets/theme_switcher.dart';
 import '../transaction/new_transaction_screen.dart';
 import '../../services/data_sync_notifier.dart';
 
@@ -22,6 +26,8 @@ class GroupDetailScreen extends StatefulWidget {
 class _GroupDetailScreenState extends State<GroupDetailScreen> {
   late Future<Map<String, dynamic>> _dataFuture;
   String _activeFilter = 'All';
+
+  String _tr(String text) => AppSettings.instance.tr(text);
 
   @override
   void initState() {
@@ -67,15 +73,18 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FF),
-      appBar: _buildAppBar(context),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _dataFuture,
+    final colors = AppTheme.of(context);
+    return ListenableBuilder(
+      listenable: AppSettings.instance,
+      builder: (context, _) => Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: _buildAppBar(context),
+        body: FutureBuilder<Map<String, dynamic>>(
+          future: _dataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF0453CD)),
+            return Center(
+              child: CircularProgressIndicator(color: colors.primary),
             );
           }
 
@@ -119,68 +128,73 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const NewTransactionScreen()),
-          );
-          _refreshData();
-        },
-        backgroundColor: const Color(0xFF041627),
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add, size: 32),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const NewTransactionScreen()),
+            );
+            _refreshData();
+          },
+          backgroundColor: colors.primary,
+          foregroundColor: Colors.white,
+          child: const Icon(Icons.add, size: 32),
+        ),
       ),
     );
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
+    final colors = AppTheme.of(context);
     final initials = widget.groupName.isNotEmpty ? widget.groupName.substring(0, 1).toUpperCase() : 'G';
 
     return AppBar(
-      backgroundColor: const Color(0xFFF8F9FF),
+      backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? colors.surface,
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Color(0xFF041627)),
+        icon: Icon(Icons.arrow_back, color: colors.textPrimary),
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
         widget.groupName,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF041627),
+          color: colors.textPrimary,
         ),
       ),
       actions: [
+        const ThemeSwitcherButton(),
+        const LanguageSwitcherButton(),
         IconButton(
-          icon: const Icon(Icons.refresh, color: Color(0xFF041627)),
+          icon: Icon(Icons.refresh, color: colors.textPrimary),
           onPressed: _refreshData,
         ),
         Container(
           margin: const EdgeInsets.only(right: 16, left: 8),
           width: 32,
           height: 32,
-          decoration: const BoxDecoration(
-            color: Color(0xFFD2E4FB),
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
           child: Text(
             initials,
-            style: const TextStyle(color: Color(0xFF041627), fontWeight: FontWeight.bold, fontSize: 12),
+            style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold, fontSize: 12),
           ),
         ),
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1.0),
-        child: Container(color: const Color(0xFFC4C6CD), height: 1.0),
+        child: Container(color: colors.border, height: 1.0),
       ),
     );
   }
 
   Widget _buildBalanceSummary(BuildContext context, GroupModel? group, int totalTxCount) {
+    final colors = AppTheme.of(context);
     final isDesktop = MediaQuery.of(context).size.width > 768;
     final balanceText = group?.balance ?? '₹0.00';
 
@@ -193,9 +207,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A2B3C),
+              color: colors.isDark ? colors.surface : const Color(0xFF0F172A),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF74777D)),
+              border: Border.all(color: colors.isDark ? colors.border : const Color(0xFF334155)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,22 +218,22 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'REMAINING BALANCE',
+                    Text(
+                      _tr('REMAINING BALANCE'),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF8192A7),
+                        color: colors.isDark ? colors.textMuted : const Color(0xFF94A3B8),
                         letterSpacing: 1.5,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       balanceText,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: colors.isDark ? colors.primary : Colors.white,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -228,11 +242,15 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    const Icon(Icons.account_balance_wallet, color: Color(0xFFB7C8DE), size: 16),
+                    Icon(Icons.account_balance_wallet,
+                        color: colors.isDark ? colors.textMuted : const Color(0xFF94A3B8),
+                        size: 16),
                     const SizedBox(width: 8),
                     Text(
-                      group != null ? 'Status: ${group.status}' : 'Real-time Live Sync',
-                      style: const TextStyle(fontSize: 14, color: Color(0xFFB7C8DE)),
+                      group != null ? '${_tr('Status')}: ${_tr(group.status)}' : _tr('Real-time Live Sync'),
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: colors.isDark ? colors.textMuted : const Color(0xFFCBD5E1)),
                     ),
                   ],
                 ),
@@ -246,28 +264,28 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFFD3E4FE),
+              color: colors.surfaceSubtle,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFC4C6CD)),
+              border: Border.all(color: colors.border),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('PROJECT LEDGER', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF44474C))),
+                Text(_tr('PROJECT LEDGER'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textSecondary)),
                 const SizedBox(height: 4),
                 Text(
                   widget.groupName,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF041627)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colors.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const Divider(height: 24, color: Color(0xFFC4C6CD)),
-                const Text('TOTAL TRANSACTIONS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF44474C))),
+                Divider(height: 24, color: colors.border),
+                Text(_tr('TOTAL TRANSACTIONS'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textSecondary)),
                 const SizedBox(height: 4),
                 Text(
                   '$totalTxCount',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF041627)),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colors.primary),
                 ),
               ],
             ),
@@ -296,6 +314,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   }
 
   Widget _buildFilterChip(String label) {
+    final colors = AppTheme.of(context);
     final isActive = _activeFilter == label;
     return GestureDetector(
       onTap: () {
@@ -306,16 +325,16 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF041627) : const Color(0xFFEFF4FF),
+          color: isActive ? colors.primary : colors.surfaceSubtle,
           borderRadius: BorderRadius.circular(24),
-          border: isActive ? null : Border.all(color: const Color(0xFFC4C6CD)),
+          border: isActive ? null : Border.all(color: colors.border),
         ),
         child: Text(
-          label,
+          _tr(label),
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: isActive ? Colors.white : const Color(0xFF44474C),
+            color: isActive ? Colors.white : colors.textSecondary,
           ),
         ),
       ),
@@ -323,22 +342,23 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   }
 
   Widget _buildTransactionHistory(List<dynamic> transactions) {
+    final colors = AppTheme.of(context);
     if (transactions.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFC4C6CD)),
+          border: Border.all(color: colors.border),
         ),
-        child: const Center(
+        child: Center(
           child: Column(
             children: [
-              Icon(Icons.receipt_long_outlined, size: 48, color: Color(0xFF94A3B8)),
-              SizedBox(height: 12),
+              Icon(Icons.receipt_long_outlined, size: 48, color: colors.textMuted),
+              const SizedBox(height: 12),
               Text(
-                'No transactions found for this filter.',
-                style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                _tr('No transactions found for this filter.'),
+                style: TextStyle(color: colors.textSecondary, fontSize: 14),
               ),
             ],
           ),
@@ -349,16 +369,16 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Transaction History (Tap to Edit)',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0B1C30)),
+        Text(
+          _tr('Transaction History (Tap to Edit)'),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary),
         ),
         const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFC4C6CD)),
+            border: Border.all(color: colors.border),
           ),
           child: Column(
             children: List.generate(transactions.length, (index) {
@@ -366,7 +386,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               return Column(
                 children: [
                   _buildDynamicTransactionItem(item),
-                  if (index < transactions.length - 1) const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                  if (index < transactions.length - 1) Divider(height: 1, color: colors.border),
                 ],
               );
             }),
@@ -377,6 +397,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   }
 
   Widget _buildDynamicTransactionItem(Map<String, dynamic> item) {
+    final colors = AppTheme.of(context);
     final title = item['description'] ?? item['category'] ?? 'Transaction';
     final category = item['category'] ?? 'OTHER';
     final type = (item['type'] ?? '').toString().toUpperCase();
@@ -384,9 +405,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     final amountVal = (item['amount'] is num) ? (item['amount'] as num).toDouble() : 0.0;
 
     final amountStr = isReceived ? '+ ₹${amountVal.toStringAsFixed(2)}' : '- ₹${amountVal.toStringAsFixed(2)}';
-    final amountColor = isReceived ? const Color(0xFF0453CD) : const Color(0xFFBA1A1A);
-    final iconBg = isReceived ? const Color(0xFFDCE9FF) : const Color(0xFFFFDAD6);
-    final iconColor = isReceived ? const Color(0xFF0453CD) : const Color(0xFFBA1A1A);
+    final amountColor = isReceived ? colors.success : colors.error;
+    final iconBg = isReceived ? colors.success.withValues(alpha: 0.12) : colors.error.withValues(alpha: 0.12);
+    final iconColor = isReceived ? colors.success : colors.error;
     final iconData = isReceived ? Icons.download : Icons.outbound;
 
     final dateStr = item['createdAt'] != null
@@ -413,17 +434,17 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                 children: [
                   Text(
                     title.toString(),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF0B1C30)),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
                       Text(
                         category.toString(),
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF44474C)),
+                        style: TextStyle(fontSize: 13, color: colors.textSecondary),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.edit, size: 14, color: Color(0xFF0453CD)),
+                      Icon(Icons.edit, size: 14, color: colors.primary),
                     ],
                   ),
                 ],
@@ -439,7 +460,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                 const SizedBox(height: 4),
                 Text(
                   dateStr,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF74777D)),
+                  style: TextStyle(fontSize: 12, color: colors.textMuted),
                 ),
               ],
             ),
@@ -450,6 +471,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   }
 
   void _showEditTransactionSheet(Map<String, dynamic> item) {
+    final colors = AppTheme.of(context);
     final txId = item['_id'] ?? item['id'] ?? '';
     final currentAmount = (item['amount'] != null) ? item['amount'].toString() : '';
     final currentType = (item['type'] ?? '').toString().toUpperCase() == 'RECEIVED' ? 'Received' : 'Spent';
@@ -465,6 +487,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 
     showModalBottomSheet(
       context: context,
+      backgroundColor: colors.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -484,12 +507,12 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Edit Transaction (Author)',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF041627)),
+                  Text(
+                    _tr('Edit Transaction (Author)'),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colors.textPrimary),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close, color: colors.textSecondary),
                     onPressed: () => Navigator.pop(ctx),
                   ),
                 ],
@@ -501,9 +524,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                 children: [
                   Expanded(
                     child: ChoiceChip(
-                      label: const Center(child: Text('Received')),
+                      label: Center(child: Text(_tr('Received'))),
                       selected: selectedType == 'Received',
-                      selectedColor: const Color(0xFFDCE9FF),
+                      selectedColor: colors.success.withValues(alpha: 0.15),
                       onSelected: (val) {
                         if (val) setModalState(() => selectedType = 'Received');
                       },
@@ -512,9 +535,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ChoiceChip(
-                      label: const Center(child: Text('Spent')),
+                      label: Center(child: Text(_tr('Spent'))),
                       selected: selectedType == 'Spent',
-                      selectedColor: const Color(0xFFFFDAD6),
+                      selectedColor: colors.error.withValues(alpha: 0.15),
                       onSelected: (val) {
                         if (val) setModalState(() => selectedType = 'Spent');
                       },
@@ -528,26 +551,35 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               TextField(
                 controller: amountCtrl,
                 keyboardType: TextInputType.number,
+                style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
-                  labelText: 'Amount (₹)',
-                  prefixIcon: const Icon(Icons.currency_rupee, color: Color(0xFF0453CD)),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  labelText: _tr('Amount (₹)'),
+                  labelStyle: TextStyle(color: colors.textSecondary),
+                  prefixIcon: Icon(Icons.currency_rupee, color: colors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.primary, width: 2)),
                 ),
               ),
               const SizedBox(height: 12),
 
               // Category Dropdown
               DropdownButtonFormField<String>(
+                dropdownColor: colors.surface,
+                style: TextStyle(color: colors.textPrimary),
                 value: ['Labour', 'Material', 'Fuel', 'Equipment', 'Other'].contains(selectedCategory)
                     ? selectedCategory
                     : 'Labour',
                 decoration: InputDecoration(
-                  labelText: 'Category',
-                  prefixIcon: const Icon(Icons.category, color: Color(0xFF0453CD)),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  labelText: _tr('Category'),
+                  labelStyle: TextStyle(color: colors.textSecondary),
+                  prefixIcon: Icon(Icons.category, color: colors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.primary, width: 2)),
                 ),
                 items: ['Labour', 'Material', 'Fuel', 'Equipment', 'Other']
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .map((c) => DropdownMenuItem(value: c, child: Text(_tr(c), style: TextStyle(color: colors.textPrimary))))
                     .toList(),
                 onChanged: (val) {
                   if (val != null) setModalState(() => selectedCategory = val);
@@ -557,16 +589,21 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 
               // Payment Method
               DropdownButtonFormField<String>(
+                dropdownColor: colors.surface,
+                style: TextStyle(color: colors.textPrimary),
                 value: ['Cash', 'UPI', 'Bank Transfer', 'Cheque'].contains(selectedMethod)
                     ? selectedMethod
                     : 'Cash',
                 decoration: InputDecoration(
-                  labelText: 'Payment Method',
-                  prefixIcon: const Icon(Icons.payments, color: Color(0xFF0453CD)),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  labelText: _tr('Payment Method'),
+                  labelStyle: TextStyle(color: colors.textSecondary),
+                  prefixIcon: Icon(Icons.payments, color: colors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.primary, width: 2)),
                 ),
                 items: ['Cash', 'UPI', 'Bank Transfer', 'Cheque']
-                    .map((m) => DropdownMenuItem(value: m, child: Text(m)))
+                    .map((m) => DropdownMenuItem(value: m, child: Text(_tr(m), style: TextStyle(color: colors.textPrimary))))
                     .toList(),
                 onChanged: (val) {
                   if (val != null) setModalState(() => selectedMethod = val);
@@ -577,10 +614,14 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               // Notes Input
               TextField(
                 controller: notesCtrl,
+                style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
-                  labelText: 'Notes / Description',
-                  prefixIcon: const Icon(Icons.notes, color: Color(0xFF0453CD)),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  labelText: _tr('Notes / Description'),
+                  labelStyle: TextStyle(color: colors.textSecondary),
+                  prefixIcon: Icon(Icons.notes, color: colors.primary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.primary, width: 2)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -604,20 +645,20 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 
                     messenger.showSnackBar(
                       SnackBar(
-                        content: Text(res['message'] ?? 'Transaction updated'),
-                        backgroundColor: res['success'] == true ? const Color(0xFF10b981) : const Color(0xFFBA1A1A),
+                        content: Text(_tr(res['message'] ?? 'Transaction updated')),
+                        backgroundColor: res['success'] == true ? colors.success : colors.error,
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
                     _refreshData();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0453CD),
+                    backgroundColor: colors.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text('Save Changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text(_tr('Save Changes'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

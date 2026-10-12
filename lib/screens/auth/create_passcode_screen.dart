@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
+import '../../services/app_settings.dart';
+import '../../widgets/language_switcher.dart';
 import '../../widgets/spend_hike_logo.dart';
 import 'confirm_passcode_screen.dart';
 
@@ -21,6 +23,8 @@ class _CreatePasscodeScreenState extends State<CreatePasscodeScreen> {
   final FocusNode _focusNode = FocusNode();
   String? _errorMessage;
 
+  String _tr(String key) => AppSettings.instance.tr(key);
+
   @override
   void dispose() {
     _pinController.dispose();
@@ -31,7 +35,7 @@ class _CreatePasscodeScreenState extends State<CreatePasscodeScreen> {
   void _onProceed(String pin) {
     if (pin.length != _pinLength) {
       setState(() {
-        _errorMessage = 'Please enter a complete $_pinLength-digit passcode';
+        _errorMessage = _tr('Please enter a complete $_pinLength-digit passcode');
       });
       return;
     }
@@ -54,76 +58,89 @@ class _CreatePasscodeScreenState extends State<CreatePasscodeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    return ListenableBuilder(
+      listenable: AppSettings.instance,
+      builder: (context, _) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
 
-    final defaultPinTheme = PinTheme(
-      width: _pinLength == 6 ? 48 : 58,
-      height: 60,
-      textStyle: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: isDark ? Colors.white : const Color(0xFF0F172A),
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+        final defaultPinTheme = PinTheme(
+          width: _pinLength == 6 ? 48 : 58,
+          height: 60,
+          textStyle: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
           ),
-        ],
-      ),
-    );
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+        );
 
-    final focusedPinTheme = defaultPinTheme.copyWith(
-      decoration: defaultPinTheme.decoration?.copyWith(
-        border: Border.all(
-          color: theme.colorScheme.primary,
-          width: 2.5,
-        ),
-      ),
-    );
+        final focusedPinTheme = defaultPinTheme.copyWith(
+          decoration: defaultPinTheme.decoration?.copyWith(
+            border: Border.all(
+              color: theme.colorScheme.primary,
+              width: 2.5,
+            ),
+          ),
+        );
 
-    final errorPinTheme = defaultPinTheme.copyWith(
-      decoration: defaultPinTheme.decoration?.copyWith(
-        border: Border.all(
-          color: const Color(0xFFEF4444),
-          width: 2,
-        ),
-      ),
-    );
+        final errorPinTheme = defaultPinTheme.copyWith(
+          decoration: defaultPinTheme.decoration?.copyWith(
+            border: Border.all(
+              color: const Color(0xFFEF4444),
+              width: 2,
+            ),
+          ),
+        );
 
-    return Scaffold(
-      appBar: widget.isResetFlow
-          ? AppBar(
-              title: const Text('New Passcode'),
-              elevation: 0,
-            )
-          : null,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 32.0),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (!widget.isResetFlow) ...[
-                    const SpendHikeLogo(
-                      isVertical: false,
-                      iconSize: 42,
-                      fontSize: 26,
-                    ),
-                    const SizedBox(height: 36),
+        return Scaffold(
+          appBar: widget.isResetFlow
+              ? AppBar(
+                  title: Text(_tr('New Passcode')),
+                  elevation: 0,
+                  actions: const [
+                    LanguageSwitcherButton(),
+                    SizedBox(width: 8),
                   ],
+                )
+              : null,
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 32.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (!widget.isResetFlow) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: const [
+                            SpendHikeLogo(
+                              isVertical: false,
+                              iconSize: 42,
+                              fontSize: 26,
+                            ),
+                            LanguageSwitcherButton(),
+                          ],
+                        ),
+                        const SizedBox(height: 36),
+                      ],
 
                   Container(
                     width: 72,
@@ -142,7 +159,7 @@ class _CreatePasscodeScreenState extends State<CreatePasscodeScreen> {
                   const SizedBox(height: 24),
 
                   Text(
-                    'Create Passcode',
+                    _tr('Create Passcode'),
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       letterSpacing: -0.5,
@@ -152,7 +169,7 @@ class _CreatePasscodeScreenState extends State<CreatePasscodeScreen> {
                   const SizedBox(height: 8),
 
                   Text(
-                    'Set a secure passcode to protect your SpendHike account and transaction ledgers.',
+                    _tr('Set a secure passcode to protect your SpendHike account and transaction ledgers.'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -175,8 +192,8 @@ class _CreatePasscodeScreenState extends State<CreatePasscodeScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildLengthToggle(4, '4 Digits'),
-                        _buildLengthToggle(6, '6 Digits'),
+                        _buildLengthToggle(4, _tr('4 Digits')),
+                        _buildLengthToggle(6, _tr('6 Digits')),
                       ],
                     ),
                   ),
@@ -240,9 +257,9 @@ class _CreatePasscodeScreenState extends State<CreatePasscodeScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: const Text(
-                        'Continue',
-                        style: TextStyle(
+                      child: Text(
+                        _tr('Continue'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -255,6 +272,8 @@ class _CreatePasscodeScreenState extends State<CreatePasscodeScreen> {
           ),
         ),
       ),
+    );
+      },
     );
   }
 

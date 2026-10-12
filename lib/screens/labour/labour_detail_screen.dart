@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../config/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/data_sync_notifier.dart';
+import '../../services/app_settings.dart';
+import '../../widgets/language_switcher.dart';
+import '../../widgets/theme_switcher.dart';
 
 class LabourDetailScreen extends StatefulWidget {
   final String labourId;
@@ -18,6 +22,8 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
   List<dynamic> _ledger = [];
   List<dynamic> _attendance = [];
   List<dynamic> _payments = [];
+
+  String _tr(String key) => AppSettings.instance.tr(key);
 
   @override
   void initState() {
@@ -57,81 +63,96 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Labour Details')),
-        body: const Center(child: CircularProgressIndicator(color: Color(0xFF0453CD))),
-      );
-    }
+    final colors = AppTheme.of(context);
+    return ListenableBuilder(
+      listenable: AppSettings.instance,
+      builder: (context, _) {
+        if (_isLoading) {
+          return Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            appBar: AppBar(title: Text(_tr('Labour Details'), style: TextStyle(color: colors.textPrimary))),
+            body: Center(child: CircularProgressIndicator(color: colors.primary)),
+          );
+        }
 
-    if (_labourData == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Labour Details')),
-        body: const Center(child: Text('Labour not found')),
-      );
-    }
+        if (_labourData == null) {
+          return Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            appBar: AppBar(title: Text(_tr('Labour Details'), style: TextStyle(color: colors.textPrimary))),
+            body: Center(child: Text(_tr('Labour not found'), style: TextStyle(color: colors.textSecondary))),
+          );
+        }
 
-    final name = _labourData!['name'] ?? 'Unknown';
-    final labourType = _labourData!['labourType'] ?? 'Helper';
-    final mobile = _labourData!['mobileNumber'] ?? 'N/A';
-    final dihadiRate = _labourData!['dihadiRate'] ?? 0;
-    final customId = _labourData!['labourId'] ?? '';
-    final siteName = (_labourData!['siteId'] is Map) ? _labourData!['siteId']['name'] : 'Assigned Site';
-    final isCarigar = labourType == 'Carigar';
+        final name = _labourData!['name'] ?? 'Unknown';
+        final labourType = _labourData!['labourType'] ?? 'Helper';
+        final mobile = _labourData!['mobileNumber'] ?? 'N/A';
+        final dihadiRate = _labourData!['dihadiRate'] ?? 0;
+        final customId = _labourData!['labourId'] ?? '';
+        final siteName = (_labourData!['siteId'] is Map) ? _labourData!['siteId']['name'] : 'Assigned Site';
+        final isCarigar = labourType == 'Carigar';
 
-    final totalDihadi = _summary?['totalDihadi'] ?? 0;
-    final totalEarned = _summary?['totalEarned'] ?? 0;
-    final totalPaid = _summary?['totalPaid'] ?? 0;
-    final totalAdvance = _summary?['totalAdvance'] ?? 0;
-    final totalDeduction = _summary?['totalDeduction'] ?? 0;
-    final outstanding = _summary?['outstanding'] ?? 0;
+        final totalDihadi = _summary?['totalDihadi'] ?? 0;
+        final totalEarned = _summary?['totalEarned'] ?? 0;
+        final totalPaid = _summary?['totalPaid'] ?? 0;
+        final totalAdvance = _summary?['totalAdvance'] ?? 0;
+        final totalDeduction = _summary?['totalDeduction'] ?? 0;
+        final outstanding = _summary?['outstanding'] ?? 0;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FF),
-      appBar: AppBar(
-        title: Text(name, overflow: TextOverflow.ellipsis),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: const Color(0xFF0453CD),
-          indicatorColor: const Color(0xFF0453CD),
-          tabs: const [
-            Tab(text: 'Overview'),
-            Tab(text: 'Ledger'),
-            Tab(text: 'Attendance'),
-            Tab(text: 'Payments'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // 1. Overview Tab
-          _buildOverviewTab(
-            name: name,
-            labourType: labourType,
-            mobile: mobile,
-            dihadiRate: dihadiRate,
-            customId: customId,
-            siteName: siteName,
-            isCarigar: isCarigar,
-            totalDihadi: totalDihadi,
-            totalEarned: totalEarned,
-            totalPaid: totalPaid,
-            totalAdvance: totalAdvance,
-            totalDeduction: totalDeduction,
-            outstanding: outstanding,
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? colors.surface,
+            title: Text(name, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textPrimary)),
+            actions: const [
+              ThemeSwitcherButton(),
+              LanguageSwitcherButton(),
+              SizedBox(width: 8),
+            ],
+            bottom: TabBar(
+              controller: _tabController,
+              labelColor: colors.primary,
+              indicatorColor: colors.primary,
+              unselectedLabelColor: colors.textSecondary,
+              tabs: [
+                Tab(text: _tr('Overview')),
+                Tab(text: _tr('Ledger')),
+                Tab(text: _tr('Attendance')),
+                Tab(text: _tr('Payments')),
+              ],
+            ),
           ),
+          body: TabBarView(
+            controller: _tabController,
+            children: [
+              // 1. Overview Tab
+              _buildOverviewTab(
+                name: name,
+                labourType: labourType,
+                mobile: mobile,
+                dihadiRate: dihadiRate,
+                customId: customId,
+                siteName: siteName,
+                isCarigar: isCarigar,
+                totalDihadi: totalDihadi,
+                totalEarned: totalEarned,
+                totalPaid: totalPaid,
+                totalAdvance: totalAdvance,
+                totalDeduction: totalDeduction,
+                outstanding: outstanding,
+              ),
 
-          // 2. Ledger Tab
-          _buildLedgerTab(),
+              // 2. Ledger Tab
+              _buildLedgerTab(),
 
-          // 3. Attendance Tab
-          _buildAttendanceTab(),
+              // 3. Attendance Tab
+              _buildAttendanceTab(),
 
-          // 4. Payments Tab
-          _buildPaymentsTab(),
-        ],
-      ),
+              // 4. Payments Tab
+              _buildPaymentsTab(),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -150,6 +171,7 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
     required num totalDeduction,
     required num outstanding,
   }) {
+    final colors = AppTheme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -188,7 +210,7 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                labourType,
+                                _tr(labourType),
                                 style: TextStyle(
                                   color: isCarigar ? const Color(0xFF0453CD) : const Color(0xFF10B981),
                                   fontWeight: FontWeight.bold,
@@ -199,8 +221,8 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text('ID: $customId • Site: $siteName', style: const TextStyle(color: Colors.grey, fontSize: 12), overflow: TextOverflow.ellipsis),
-                        Text('Mobile: $mobile • Rate: ₹$dihadiRate / Dihadi', style: const TextStyle(color: Colors.black87, fontSize: 12, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
+                        Text('ID: $customId • ${_tr('Site/Project')}: $siteName', style: TextStyle(color: colors.textMuted, fontSize: 12), overflow: TextOverflow.ellipsis),
+                        Text('${_tr('Mobile Number')}: $mobile • ${_tr('Rate')}: ₹$dihadiRate / ${_tr('Dihadi')}', style: TextStyle(color: colors.textPrimary, fontSize: 12, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
@@ -211,7 +233,7 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
           const SizedBox(height: 16),
 
           // Financial Summary Cards - Responsive
-          const Text('Financial Summary', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(_tr('Financial Summary'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary)),
           const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -227,12 +249,12 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
                 mainAxisSpacing: 12,
                 childAspectRatio: ratio,
                 children: [
-                  _buildSummaryTile('Total Dihadi', '$totalDihadi Dihadi', Icons.calendar_today, Colors.blue),
-                  _buildSummaryTile('Total Earned', '₹$totalEarned', Icons.monetization_on, Colors.indigo),
-                  _buildSummaryTile('Total Paid', '₹$totalPaid', Icons.check_circle, Colors.green),
-                  _buildSummaryTile('Total Advance', '₹$totalAdvance', Icons.payment, Colors.orange),
-                  _buildSummaryTile('Total Deduction', '₹$totalDeduction', Icons.remove_circle_outline, Colors.purple),
-                  _buildSummaryTile('Outstanding Balance', '₹$outstanding', Icons.account_balance_wallet, outstanding > 0 ? Colors.red : Colors.green),
+                  _buildSummaryTile(_tr('Total Dihadi'), '$totalDihadi ${_tr('Dihadi')}', Icons.calendar_today, Colors.blue),
+                  _buildSummaryTile(_tr('Total Earned'), '₹$totalEarned', Icons.monetization_on, Colors.indigo),
+                  _buildSummaryTile(_tr('Total Paid'), '₹$totalPaid', Icons.check_circle, Colors.green),
+                  _buildSummaryTile(_tr('Total Advance'), '₹$totalAdvance', Icons.payment, Colors.orange),
+                  _buildSummaryTile(_tr('Total Deduction'), '₹$totalDeduction', Icons.remove_circle_outline, Colors.purple),
+                  _buildSummaryTile(_tr('Outstanding Balance'), '₹$outstanding', Icons.account_balance_wallet, outstanding > 0 ? Colors.red : Colors.green),
                 ],
               );
             },
@@ -243,18 +265,19 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
   }
 
   Widget _buildSummaryTile(String title, String value, IconData icon, Color color) {
+    final colors = AppTheme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: colors.border),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: color.withValues(alpha: 0.1),
+            backgroundColor: color.withValues(alpha: 0.15),
             child: Icon(icon, color: color, size: 16),
           ),
           const SizedBox(width: 8),
@@ -263,7 +286,7 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(title, style: const TextStyle(fontSize: 9, color: Colors.grey), overflow: TextOverflow.ellipsis, maxLines: 1),
+                Text(title, style: TextStyle(fontSize: 9, color: colors.textMuted), overflow: TextOverflow.ellipsis, maxLines: 1),
                 const SizedBox(height: 2),
                 FittedBox(
                   fit: BoxFit.scaleDown,
@@ -280,27 +303,28 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
 
   // ─── Ledger Table ─────────────────────────────────────────────────────────────
   Widget _buildLedgerTab() {
+    final colors = AppTheme.of(context);
     if (_ledger.isEmpty) {
-      return const Center(child: Text('No ledger entries yet.'));
+      return Center(child: Text(_tr('No ledger entries yet.')));
     }
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SingleChildScrollView(
         child: DataTable(
-          headingRowColor: WidgetStateProperty.all(const Color(0xFF041627)),
-          headingTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-          columns: const [
-            DataColumn(label: Text('Date')),
-            DataColumn(label: Text('Description')),
-            DataColumn(label: Text('Dihadi')),
-            DataColumn(label: Text('Rate')),
-            DataColumn(label: Text('Earned')),
-            DataColumn(label: Text('Payment')),
-            DataColumn(label: Text('Advance')),
-            DataColumn(label: Text('Deduction')),
-            DataColumn(label: Text('Adjustment')),
-            DataColumn(label: Text('Balance')),
+          headingRowColor: WidgetStateProperty.all(colors.isDark ? colors.surfaceSubtle : const Color(0xFF041627)),
+          headingTextStyle: TextStyle(color: colors.isDark ? colors.textPrimary : Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+          columns: [
+            DataColumn(label: Text(_tr('Date'))),
+            DataColumn(label: Text(_tr('Description'))),
+            DataColumn(label: Text(_tr('Dihadi'))),
+            DataColumn(label: Text(_tr('Rate'))),
+            DataColumn(label: Text(_tr('Earned'))),
+            DataColumn(label: Text(_tr('Payment'))),
+            DataColumn(label: Text(_tr('Advance'))),
+            DataColumn(label: Text(_tr('Deduction'))),
+            DataColumn(label: Text(_tr('Adjustment'))),
+            DataColumn(label: Text(_tr('Balance'))),
           ],
           rows: _ledger.map((row) {
             final dateStr = (row['date'] ?? '').toString().split('T').first;
@@ -315,16 +339,16 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
             final bal = '₹${row['balance'] ?? 0}';
 
             return DataRow(cells: [
-              DataCell(Text(dateStr, style: const TextStyle(fontSize: 12))),
-              DataCell(Text(desc, style: const TextStyle(fontSize: 12))),
-              DataCell(Text(dihadi, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-              DataCell(Text(rate, style: const TextStyle(fontSize: 12))),
+              DataCell(Text(dateStr, style: TextStyle(fontSize: 12, color: colors.textPrimary))),
+              DataCell(Text(desc, style: TextStyle(fontSize: 12, color: colors.textPrimary))),
+              DataCell(Text(dihadi, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textPrimary))),
+              DataCell(Text(rate, style: TextStyle(fontSize: 12, color: colors.textPrimary))),
               DataCell(Text(earned, style: const TextStyle(fontSize: 12, color: Colors.indigo, fontWeight: FontWeight.w600))),
               DataCell(Text(pmt, style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w600))),
               DataCell(Text(adv, style: const TextStyle(fontSize: 12, color: Colors.orange, fontWeight: FontWeight.w600))),
               DataCell(Text(ded, style: const TextStyle(fontSize: 12, color: Colors.purple))),
-              DataCell(Text(adj, style: const TextStyle(fontSize: 12))),
-              DataCell(Text(bal, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0453CD)))),
+              DataCell(Text(adj, style: TextStyle(fontSize: 12, color: colors.textPrimary))),
+              DataCell(Text(bal, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.primary))),
             ]);
           }).toList(),
         ),
@@ -335,7 +359,7 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
   // ─── Attendance Tab ──────────────────────────────────────────────────────────
   Widget _buildAttendanceTab() {
     if (_attendance.isEmpty) {
-      return const Center(child: Text('No attendance records found.'));
+      return Center(child: Text(_tr('No attendance records found.')));
     }
 
     return ListView.separated(
@@ -354,9 +378,9 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
               backgroundColor: const Color(0xFF0453CD).withValues(alpha: 0.1),
               child: Text('$dihadi', style: const TextStyle(color: Color(0xFF0453CD), fontWeight: FontWeight.bold)),
             ),
-            title: Text('Date: $dateStr', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text('Earned Amount: ₹$earned'),
-            trailing: Text('$dihadi Dihadi', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0453CD))),
+            title: Text('${_tr('Date')}: $dateStr', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            subtitle: Text('${_tr('Earned Amount')}: ₹$earned'),
+            trailing: Text('$dihadi ${_tr('Dihadi')}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0453CD))),
           ),
         );
       },
@@ -366,7 +390,7 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
   // ─── Payments Tab ───────────────────────────────────────────────────────────
   Widget _buildPaymentsTab() {
     if (_payments.isEmpty) {
-      return const Center(child: Text('No payments recorded yet.'));
+      return Center(child: Text(_tr('No payments recorded yet.')));
     }
 
     return ListView.separated(
@@ -392,8 +416,8 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
                 color: isAdvance ? Colors.orange : Colors.green,
               ),
             ),
-            title: Text('$pmtType (₹$amount)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
-            subtitle: Text('$dateStr • Method: $method${notes.isNotEmpty ? ' • $notes' : ''}', overflow: TextOverflow.ellipsis),
+            title: Text('${_tr(pmtType)} (₹$amount)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
+            subtitle: Text('$dateStr • ${_tr('Payment Method')}: ${_tr(method)}${notes.isNotEmpty ? ' • $notes' : ''}', overflow: TextOverflow.ellipsis),
             trailing: Text('₹$amount', style: TextStyle(fontWeight: FontWeight.bold, color: isAdvance ? Colors.orange : Colors.green)),
           ),
         );

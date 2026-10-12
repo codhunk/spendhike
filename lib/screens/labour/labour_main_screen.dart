@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../config/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/data_sync_notifier.dart';
 import '../../models/app_models.dart';
+import '../../services/app_settings.dart';
 import 'labour_detail_screen.dart';
 
 class LabourMainScreen extends StatefulWidget {
@@ -14,6 +16,8 @@ class LabourMainScreen extends StatefulWidget {
 class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
+
+  String _tr(String key) => AppSettings.instance.tr(key);
 
   // Global State
   List<GroupModel> _sites = [];
@@ -116,45 +120,51 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FF),
-      appBar: AppBar(
-        title: const Text(
-          'Labour Management & Dihadi Ledger',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          overflow: TextOverflow.ellipsis,
-        ),
-        backgroundColor: Colors.white,
-        elevation: 1,
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelColor: const Color(0xFF0453CD),
-          indicatorColor: const Color(0xFF0453CD),
-          unselectedLabelColor: Colors.grey,
-          tabs: const [
-            Tab(icon: Icon(Icons.dashboard_outlined), text: 'Dashboard'),
-            Tab(icon: Icon(Icons.how_to_reg_outlined), text: 'Daily Attendance'),
-            Tab(icon: Icon(Icons.people_outline), text: 'Labourers'),
-            Tab(icon: Icon(Icons.payment_outlined), text: 'Payments & Advances'),
-            Tab(icon: Icon(Icons.receipt_long_outlined), text: 'Site Kharcha'),
-            Tab(icon: Icon(Icons.analytics_outlined), text: 'Reports'),
-          ],
-        ),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF0453CD)))
-          : TabBarView(
+    final colors = AppTheme.of(context);
+    return ListenableBuilder(
+      listenable: AppSettings.instance,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: AppBar(
+            title: Text(
+              _tr('Labour Management & Dihadi Ledger'),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: colors.textPrimary),
+              overflow: TextOverflow.ellipsis,
+            ),
+            backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? colors.surface,
+            elevation: 1,
+            bottom: TabBar(
               controller: _tabController,
-              children: [
-                _buildDashboardTab(),
-                _buildAttendanceTab(),
-                _buildLabourersTab(),
-                _buildPaymentsTab(),
-                _buildSiteKharchaTab(),
-                _buildReportsTab(),
+              isScrollable: true,
+              labelColor: colors.primary,
+              indicatorColor: colors.primary,
+              unselectedLabelColor: colors.textSecondary,
+              tabs: [
+                Tab(icon: const Icon(Icons.dashboard_outlined), text: _tr('Dashboard')),
+                Tab(icon: const Icon(Icons.how_to_reg_outlined), text: _tr('Daily Attendance')),
+                Tab(icon: const Icon(Icons.people_outline), text: _tr('Labourers')),
+                Tab(icon: const Icon(Icons.payment_outlined), text: _tr('Payments & Advances')),
+                Tab(icon: const Icon(Icons.receipt_long_outlined), text: _tr('Site Kharcha')),
+                Tab(icon: const Icon(Icons.analytics_outlined), text: _tr('Reports')),
               ],
             ),
+          ),
+          body: _isLoading
+              ? Center(child: CircularProgressIndicator(color: colors.primary))
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildDashboardTab(),
+                    _buildAttendanceTab(),
+                    _buildLabourersTab(),
+                    _buildPaymentsTab(),
+                    _buildSiteKharchaTab(),
+                    _buildReportsTab(),
+                  ],
+                ),
+        );
+      },
     );
   }
 
@@ -206,10 +216,10 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                               child: Icon(Icons.engineering, color: Colors.white, size: 24),
                             ),
                             const SizedBox(width: 12),
-                            const Expanded(
+                            Expanded(
                               child: Text(
-                                'Labour & Dihadi Ledger Overview',
-                                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                _tr('Labour & Dihadi Ledger Overview'),
+                                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 2,
                               ),
@@ -218,7 +228,9 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Total Active Labourers: $totalLabour (Carigar: $carigar | Helper: $helper)',
+                          AppSettings.instance.isHindi
+                              ? 'कुल सक्रिय मजदूर: $totalLabour (कारीगर: $carigar | हेल्पर: $helper)'
+                              : 'Total Active Labourers: $totalLabour (Carigar: $carigar | Helper: $helper)',
                           style: const TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                         const SizedBox(height: 14),
@@ -227,7 +239,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                           child: ElevatedButton.icon(
                             onPressed: _showAddLabourModal,
                             icon: const Icon(Icons.add, size: 18),
-                            label: const Text('Add Labour'),
+                            label: Text(_tr('Add Labour')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: const Color(0xFF0453CD),
@@ -263,9 +275,14 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Labour & Dihadi Ledger Overview', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                            Text(_tr('Labour & Dihadi Ledger Overview'), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                             const SizedBox(height: 4),
-                            Text('Total Active Labourers: $totalLabour (Carigar: $carigar | Helper: $helper)', style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                            Text(
+                              AppSettings.instance.isHindi
+                                  ? 'कुल सक्रिय मजदूर: $totalLabour (कारीगर: $carigar | हेल्पर: $helper)'
+                                  : 'Total Active Labourers: $totalLabour (Carigar: $carigar | Helper: $helper)',
+                              style: const TextStyle(color: Colors.white70, fontSize: 13),
+                            ),
                           ],
                         ),
                       ),
@@ -273,7 +290,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                       ElevatedButton.icon(
                         onPressed: _showAddLabourModal,
                         icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Add Labour'),
+                        label: Text(_tr('Add Labour')),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: const Color(0xFF0453CD),
@@ -288,7 +305,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
             const SizedBox(height: 20),
 
             // Top Metric Cards
-            const Text('Labour Counts & Attendance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(_tr('Labour Counts & Attendance'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             LayoutBuilder(
               builder: (context, constraints) {
@@ -304,10 +321,10 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                   mainAxisSpacing: 12,
                   childAspectRatio: ratio,
                   children: [
-                    _buildDashCard('TOTAL LABOUR', '$totalLabour', Icons.groups, const Color(0xFF0453CD)),
-                    _buildDashCard('CARIGAR', '$carigar', Icons.engineering, const Color(0xFF2563EB)),
-                    _buildDashCard('HELPER', '$helper', Icons.handyman, const Color(0xFF10B981)),
-                    _buildDashCard("TODAY'S DIHADI", '$todayDihadi', Icons.today, const Color(0xFFF59E0B)),
+                    _buildDashCard(_tr('TOTAL LABOUR'), '$totalLabour', Icons.groups, const Color(0xFF0453CD)),
+                    _buildDashCard(_tr('CARIGAR'), '$carigar', Icons.engineering, const Color(0xFF2563EB)),
+                    _buildDashCard(_tr('HELPER'), '$helper', Icons.handyman, const Color(0xFF10B981)),
+                    _buildDashCard(_tr("TODAY'S DIHADI"), '$todayDihadi', Icons.today, const Color(0xFFF59E0B)),
                   ],
                 );
               },
@@ -315,7 +332,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
             const SizedBox(height: 20),
 
             // Financial Metric Cards
-            const Text('Financial Ledger Summary', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(_tr('Financial Ledger Summary'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             LayoutBuilder(
               builder: (context, constraints) {
@@ -331,10 +348,10 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                   mainAxisSpacing: 12,
                   childAspectRatio: ratio,
                   children: [
-                    _buildDashCard('TOTAL EARNED WAGES', '₹$totalEarned', Icons.account_balance, const Color(0xFF6366F1)),
-                    _buildDashCard('TOTAL PAID', '₹$totalPaid', Icons.check_circle, const Color(0xFF10B981)),
-                    _buildDashCard('TOTAL ADVANCE', '₹$totalAdvance', Icons.payment, const Color(0xFFF97316)),
-                    _buildDashCard('OUTSTANDING', '₹$totalOutstanding', Icons.account_balance_wallet, totalOutstanding > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981)),
+                    _buildDashCard(_tr('TOTAL EARNED WAGES'), '₹$totalEarned', Icons.account_balance, const Color(0xFF6366F1)),
+                    _buildDashCard(_tr('TOTAL PAID'), '₹$totalPaid', Icons.check_circle, const Color(0xFF10B981)),
+                    _buildDashCard(_tr('TOTAL ADVANCE'), '₹$totalAdvance', Icons.payment, const Color(0xFFF97316)),
+                    _buildDashCard(_tr('OUTSTANDING'), '₹$totalOutstanding', Icons.account_balance_wallet, totalOutstanding > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981)),
                   ],
                 );
               },
@@ -342,7 +359,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
             const SizedBox(height: 20),
 
             // Site Kharcha & Total Labour Cost
-            const Text('Site Expenses & Total Cost', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(_tr('Site Expenses & Total Cost'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             LayoutBuilder(
               builder: (context, constraints) {
@@ -358,9 +375,9 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                   mainAxisSpacing: 12,
                   childAspectRatio: ratio,
                   children: [
-                    _buildDashCard('SITE KHARCHA (TEA/FOOD)', '₹$totalSiteKharcha', Icons.local_cafe, const Color(0xFF8B5CF6)),
-                    _buildDashCard('MONTHLY DIHADI TOTAL', '$monthlyDihadi Dihadi', Icons.calendar_month, const Color(0xFF0EA5E9)),
-                    _buildDashCard('TOTAL LABOUR COST', '₹$totalLabourCost', Icons.monetization_on, const Color(0xFF0453CD)),
+                    _buildDashCard(_tr('SITE KHARCHA (TEA/FOOD)'), '₹$totalSiteKharcha', Icons.local_cafe, const Color(0xFF8B5CF6)),
+                    _buildDashCard(_tr('MONTHLY DIHADI TOTAL'), '$monthlyDihadi Dihadi', Icons.calendar_month, const Color(0xFF0EA5E9)),
+                    _buildDashCard(_tr('TOTAL LABOUR COST'), '₹$totalLabourCost', Icons.monetization_on, const Color(0xFF0453CD)),
                   ],
                 );
               },
@@ -372,21 +389,22 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
   }
 
   Widget _buildDashCard(String title, String value, IconData icon, Color color) {
+    final colors = AppTheme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: colors.border),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(color: Colors.black.withValues(alpha: colors.isDark ? 0.2 : 0.02), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 18,
-            backgroundColor: color.withValues(alpha: 0.1),
+            backgroundColor: color.withValues(alpha: 0.12),
             child: Icon(icon, color: color, size: 18),
           ),
           const SizedBox(width: 10),
@@ -397,7 +415,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey.shade600, letterSpacing: 0.3),
+                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: colors.textSecondary, letterSpacing: 0.3),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
@@ -417,6 +435,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
 
   // ─── 2. DAILY ATTENDANCE TAB ───────────────────────────────────────────────
   Widget _buildAttendanceTab() {
+    final colors = AppTheme.of(context);
     final dateStr = '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}';
 
     return Column(
@@ -424,7 +443,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
         // Top Selectors - Responsive
         Container(
           padding: const EdgeInsets.all(12),
-          color: Colors.white,
+          color: colors.surface,
           child: Column(
             children: [
               LayoutBuilder(
@@ -436,13 +455,17 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                         DropdownButtonFormField<String>(
                           value: _selectedSiteId,
                           isExpanded: true,
+                          dropdownColor: colors.surface,
+                          style: TextStyle(color: colors.textPrimary),
                           decoration: InputDecoration(
-                            labelText: 'Select Site/Project',
-                            prefixIcon: const Icon(Icons.construction, color: Color(0xFF0453CD)),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            labelText: _tr('Select Site/Project'),
+                            labelStyle: TextStyle(color: colors.textSecondary),
+                            prefixIcon: Icon(Icons.construction, color: colors.primary),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                           ),
-                          items: _sites.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, overflow: TextOverflow.ellipsis))).toList(),
+                          items: _sites.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textPrimary)))).toList(),
                           onChanged: (val) {
                             setState(() => _selectedSiteId = val);
                             _refreshAllTabs();
@@ -464,9 +487,10 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                                 _refreshAllTabs();
                               }
                             },
-                            icon: const Icon(Icons.calendar_month, color: Color(0xFF0453CD)),
-                            label: Text('Date: $dateStr', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            icon: Icon(Icons.calendar_month, color: colors.primary),
+                            label: Text(AppSettings.instance.isHindi ? 'तारीख: $dateStr' : 'Date: $dateStr', style: TextStyle(fontWeight: FontWeight.bold, color: colors.textPrimary)),
                             style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: colors.border),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
@@ -482,13 +506,17 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                         child: DropdownButtonFormField<String>(
                           value: _selectedSiteId,
                           isExpanded: true,
+                          dropdownColor: colors.surface,
+                          style: TextStyle(color: colors.textPrimary),
                           decoration: InputDecoration(
-                            labelText: 'Select Site/Project',
-                            prefixIcon: const Icon(Icons.construction, color: Color(0xFF0453CD)),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            labelText: _tr('Select Site/Project'),
+                            labelStyle: TextStyle(color: colors.textSecondary),
+                            prefixIcon: Icon(Icons.construction, color: colors.primary),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                           ),
-                          items: _sites.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, overflow: TextOverflow.ellipsis))).toList(),
+                          items: _sites.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textPrimary)))).toList(),
                           onChanged: (val) {
                             setState(() => _selectedSiteId = val);
                             _refreshAllTabs();
@@ -509,9 +537,10 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                             _refreshAllTabs();
                           }
                         },
-                        icon: const Icon(Icons.calendar_month, color: Color(0xFF0453CD)),
-                        label: Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        icon: Icon(Icons.calendar_month, color: colors.primary),
+                        label: Text(dateStr, style: TextStyle(fontWeight: FontWeight.bold, color: colors.textPrimary)),
                         style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: colors.border),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
@@ -527,12 +556,15 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                 children: [
                   Expanded(
                     child: TextField(
+                      style: TextStyle(color: colors.textPrimary),
                       decoration: InputDecoration(
-                        hintText: 'Search Labour...',
-                        prefixIcon: const Icon(Icons.search, size: 18),
+                        hintText: _tr('Search Labour...'),
+                        hintStyle: TextStyle(color: colors.textMuted),
+                        prefixIcon: Icon(Icons.search, size: 18, color: colors.textMuted),
                         filled: true,
-                        fillColor: const Color(0xFFF8F9FF),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                        fillColor: colors.surfaceSubtle,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
                         contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
                       ),
                       onChanged: (val) {
@@ -542,9 +574,10 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                   ),
                   const SizedBox(width: 10),
                   DropdownButton<String>(
+                    dropdownColor: colors.surface,
                     value: _selectedLabourType,
                     underline: const SizedBox(),
-                    items: ['All', 'Carigar', 'Helper'].map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 13)))).toList(),
+                    items: ['All', 'Carigar', 'Helper'].map((t) => DropdownMenuItem(value: t, child: Text(_tr(t), style: TextStyle(fontSize: 13, color: colors.textPrimary)))).toList(),
                     onChanged: (val) {
                       if (val != null) setState(() => _selectedLabourType = val);
                     },
@@ -554,12 +587,12 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
             ],
           ),
         ),
-        const Divider(height: 1),
+        Divider(height: 1, color: colors.border),
 
         // Attendance List - 100% Responsive Item Layout
         Expanded(
           child: _labours.isEmpty
-              ? const Center(child: Text('No active labourers assigned to this site.'))
+              ? Center(child: Text(_tr('No active labourers assigned to this site.')))
               : ListView.separated(
                   padding: const EdgeInsets.all(12),
                   itemCount: _labours.length,
@@ -603,7 +636,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
-                                            Text('$type • ₹$rate/Dihadi', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                                            Text('${_tr(type)} • ₹$rate/${_tr('Dihadi')}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
                                           ],
                                         ),
                                       ),
@@ -618,20 +651,21 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                                     width: double.infinity,
                                     padding: const EdgeInsets.symmetric(horizontal: 10),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF8F9FF),
+                                      color: colors.surfaceSubtle,
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: const Color(0xFFC4C6CD)),
+                                      border: Border.all(color: colors.border),
                                     ),
                                     child: DropdownButton<double>(
+                                      dropdownColor: colors.surface,
                                       value: currentDihadi,
                                       isExpanded: true,
                                       underline: const SizedBox(),
-                                      items: const [
-                                        DropdownMenuItem(value: 0.0, child: Text('0 (Absent)')),
-                                        DropdownMenuItem(value: 0.5, child: Text('0.5 (Half Dihadi)')),
-                                        DropdownMenuItem(value: 1.0, child: Text('1.0 (Full Dihadi)')),
-                                        DropdownMenuItem(value: 1.5, child: Text('1.5 Dihadi')),
-                                        DropdownMenuItem(value: 2.0, child: Text('2.0 Dihadi')),
+                                      items: [
+                                        DropdownMenuItem(value: 0.0, child: Text(_tr('0 (Absent)'), style: TextStyle(color: colors.textPrimary))),
+                                        DropdownMenuItem(value: 0.5, child: Text(_tr('0.5 (Half Dihadi)'), style: TextStyle(color: colors.textPrimary))),
+                                        DropdownMenuItem(value: 1.0, child: Text(_tr('1.0 (Full Dihadi)'), style: TextStyle(color: colors.textPrimary))),
+                                        DropdownMenuItem(value: 1.5, child: Text(_tr('1.5 Dihadi'), style: TextStyle(color: colors.textPrimary))),
+                                        DropdownMenuItem(value: 2.0, child: Text(_tr('2.0 Dihadi'), style: TextStyle(color: colors.textPrimary))),
                                       ],
                                       onChanged: (val) {
                                         if (val != null) {
@@ -648,10 +682,10 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                               children: [
                                 CircleAvatar(
                                   radius: 18,
-                                  backgroundColor: isCarigar ? const Color(0xFF0453CD).withValues(alpha: 0.1) : const Color(0xFF10B981).withValues(alpha: 0.1),
+                                  backgroundColor: isCarigar ? colors.primary.withValues(alpha: 0.12) : colors.success.withValues(alpha: 0.12),
                                   child: Icon(
                                     isCarigar ? Icons.engineering : Icons.handyman,
-                                    color: isCarigar ? const Color(0xFF0453CD) : const Color(0xFF10B981),
+                                    color: isCarigar ? colors.primary : colors.success,
                                     size: 18,
                                   ),
                                 ),
@@ -660,27 +694,28 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
-                                      Text('$type • ₹$rate/Dihadi', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                      Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.textPrimary), overflow: TextOverflow.ellipsis),
+                                      Text('${_tr(type)} • ₹$rate/${_tr('Dihadi')}', style: TextStyle(color: colors.textSecondary, fontSize: 12)),
                                     ],
                                   ),
                                 ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF8F9FF),
+                                    color: colors.surfaceSubtle,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: const Color(0xFFC4C6CD)),
+                                    border: Border.all(color: colors.border),
                                   ),
                                   child: DropdownButton<double>(
+                                    dropdownColor: colors.surface,
                                     value: currentDihadi,
                                     underline: const SizedBox(),
-                                    items: const [
-                                      DropdownMenuItem(value: 0.0, child: Text('0 (Absent)')),
-                                      DropdownMenuItem(value: 0.5, child: Text('0.5 (Half)')),
-                                      DropdownMenuItem(value: 1.0, child: Text('1 (Full)')),
-                                      DropdownMenuItem(value: 1.5, child: Text('1.5 Dihadi')),
-                                      DropdownMenuItem(value: 2.0, child: Text('2 Dihadi')),
+                                    items: [
+                                      DropdownMenuItem(value: 0.0, child: Text(_tr('0 (Absent)'), style: TextStyle(color: colors.textPrimary))),
+                                      DropdownMenuItem(value: 0.5, child: Text(_tr('0.5 (Half)'), style: TextStyle(color: colors.textPrimary))),
+                                      DropdownMenuItem(value: 1.0, child: Text(_tr('1 (Full)'), style: TextStyle(color: colors.textPrimary))),
+                                      DropdownMenuItem(value: 1.5, child: Text(_tr('1.5 Dihadi'), style: TextStyle(color: colors.textPrimary))),
+                                      DropdownMenuItem(value: 2.0, child: Text(_tr('2 Dihadi'), style: TextStyle(color: colors.textPrimary))),
                                     ],
                                     onChanged: (val) {
                                       if (val != null) {
@@ -695,7 +730,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                                   child: Text(
                                     '₹${earnedAmount.toInt()}',
                                     textAlign: TextAlign.right,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0453CD)),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: colors.primary),
                                   ),
                                 ),
                               ],
@@ -711,7 +746,10 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
         // Bulk Save Attendance Bar - Responsive
         Container(
           padding: const EdgeInsets.all(12),
-          color: Colors.white,
+          decoration: BoxDecoration(
+            color: colors.surface,
+            border: Border(top: BorderSide(color: colors.border)),
+          ),
           child: LayoutBuilder(
             builder: (context, constraints) {
               final isMobile = constraints.maxWidth < 500;
@@ -722,17 +760,19 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Total Labourers: ${_labours.length} | Today\'s Dihadi: $totalSiteDihadi',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      AppSettings.instance.isHindi
+                          ? 'कुल मजदूर: ${_labours.length} | आज की दिहाड़ी: $totalSiteDihadi'
+                          : 'Total Labourers: ${_labours.length} | Today\'s Dihadi: $totalSiteDihadi',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: colors.textPrimary),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     ElevatedButton.icon(
                       onPressed: _saveBulkAttendance,
                       icon: const Icon(Icons.save, size: 18),
-                      label: const Text('Save Attendance'),
+                      label: Text(_tr('Save Attendance')),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0453CD),
+                        backgroundColor: colors.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -746,16 +786,18 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                 children: [
                   Expanded(
                     child: Text(
-                      'Total Labourers: ${_labours.length} | Today\'s Site Dihadi: $totalSiteDihadi',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      AppSettings.instance.isHindi
+                          ? 'कुल मजदूर: ${_labours.length} | आज की साइट दिहाड़ी: $totalSiteDihadi'
+                          : 'Total Labourers: ${_labours.length} | Today\'s Site Dihadi: $totalSiteDihadi',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: colors.textPrimary),
                     ),
                   ),
                   ElevatedButton.icon(
                     onPressed: _saveBulkAttendance,
                     icon: const Icon(Icons.save, size: 18),
-                    label: const Text('Save Attendance'),
+                    label: Text(_tr('Save Attendance')),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0453CD),
+                      backgroundColor: colors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -772,7 +814,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
 
   Future<void> _saveBulkAttendance() async {
     if (_selectedSiteId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a site.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_tr('Please select a site.'))));
       return;
     }
 
@@ -786,7 +828,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
     }).toList();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Saving daily attendance...'), backgroundColor: Color(0xFF0453CD)),
+      SnackBar(content: Text(_tr('Saving daily attendance...')), backgroundColor: const Color(0xFF0453CD)),
     );
 
     final res = await ApiService.saveAttendance(
@@ -799,12 +841,12 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       if (res['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['message'] ?? 'Attendance saved successfully!'), backgroundColor: Colors.green),
+          SnackBar(content: Text(res['message'] ?? _tr('Attendance saved successfully!')), backgroundColor: Colors.green),
         );
         _refreshAllTabs();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['message'] ?? 'Failed to save attendance'), backgroundColor: Colors.red),
+          SnackBar(content: Text(res['message'] ?? _tr('Failed to save attendance')), backgroundColor: Colors.red),
         );
       }
     }
@@ -812,6 +854,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
 
   // ─── 3. LABOURERS TAB ──────────────────────────────────────────────────────
   Widget _buildLabourersTab() {
+    final colors = AppTheme.of(context);
     return Column(
       children: [
         // Controls - Responsive
@@ -825,12 +868,15 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     TextField(
+                      style: TextStyle(color: colors.textPrimary),
                       decoration: InputDecoration(
-                        hintText: 'Search by Name or Mobile...',
-                        prefixIcon: const Icon(Icons.search),
+                        hintText: _tr('Search by Name or Mobile...'),
+                        hintStyle: TextStyle(color: colors.textMuted),
+                        prefixIcon: Icon(Icons.search, color: colors.textMuted),
                         filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        fillColor: colors.surfaceSubtle,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                       ),
                       onChanged: (val) {
@@ -842,9 +888,9 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                     ElevatedButton.icon(
                       onPressed: _showAddLabourModal,
                       icon: const Icon(Icons.person_add, size: 18),
-                      label: const Text('Add Labour'),
+                      label: Text(_tr('Add Labour')),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0453CD),
+                        backgroundColor: colors.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
@@ -857,12 +903,15 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                 children: [
                   Expanded(
                     child: TextField(
+                      style: TextStyle(color: colors.textPrimary),
                       decoration: InputDecoration(
-                        hintText: 'Search by Name or Mobile...',
-                        prefixIcon: const Icon(Icons.search),
+                        hintText: _tr('Search by Name or Mobile...'),
+                        hintStyle: TextStyle(color: colors.textMuted),
+                        prefixIcon: Icon(Icons.search, color: colors.textMuted),
                         filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        fillColor: colors.surfaceSubtle,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
                       ),
                       onChanged: (val) {
                         _labourSearch = val;
@@ -874,9 +923,9 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                   ElevatedButton.icon(
                     onPressed: _showAddLabourModal,
                     icon: const Icon(Icons.person_add),
-                    label: const Text('Add Labour'),
+                    label: Text(_tr('Add Labour')),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0453CD),
+                      backgroundColor: colors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
@@ -890,7 +939,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
         // List
         Expanded(
           child: _labours.isEmpty
-              ? const Center(child: Text('No labourers found.'))
+              ? Center(child: Text(_tr('No labourers found.')))
               : ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   itemCount: _labours.length,
@@ -919,12 +968,12 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                           child: Icon(isCarigar ? Icons.engineering : Icons.handyman, color: isCarigar ? const Color(0xFF0453CD) : const Color(0xFF10B981)),
                         ),
                         title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                        subtitle: Text('$type • Mobile: $mobile • ₹$rate/Dihadi', overflow: TextOverflow.ellipsis),
+                        subtitle: Text('${_tr(type)} • ${_tr('Mobile Number')}: $mobile • ₹$rate/${_tr('Dihadi')}', overflow: TextOverflow.ellipsis),
                         trailing: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            const Text('Outstanding', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            Text(_tr('Outstanding'), style: const TextStyle(fontSize: 10, color: Colors.grey)),
                             Text('₹$outstanding', style: TextStyle(fontWeight: FontWeight.bold, color: outstanding > 0 ? Colors.red : Colors.green)),
                           ],
                         ),
@@ -939,6 +988,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
 
   // ─── 4. PAYMENTS & ADVANCES TAB ───────────────────────────────────────────
   Widget _buildPaymentsTab() {
+    final colors = AppTheme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -951,15 +1001,15 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Payments & Advances Log', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(_tr('Payments & Advances Log'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary)),
                     const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: _showRecordPaymentModal,
                         icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Record Payment / Advance'),
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0453CD), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                        label: Text(_tr('Record Payment / Advance')),
+                        style: ElevatedButton.styleFrom(backgroundColor: colors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
                       ),
                     ),
                   ],
@@ -968,19 +1018,24 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Payments & Advances Log', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(_tr('Payments & Advances Log'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary)),
                   ElevatedButton.icon(
                     onPressed: _showRecordPaymentModal,
                     icon: const Icon(Icons.add),
-                    label: const Text('Record Payment / Advance'),
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0453CD), foregroundColor: Colors.white),
+                    label: Text(_tr('Record Payment / Advance')),
+                    style: ElevatedButton.styleFrom(backgroundColor: colors.primary, foregroundColor: Colors.white),
                   ),
                 ],
               );
             },
           ),
           const SizedBox(height: 16),
-          const Text('Tap "Record Payment / Advance" to record transactions for labourers.', style: TextStyle(color: Colors.grey)),
+          Text(
+            AppSettings.instance.isHindi
+                ? 'मजदूरों के लिए लेन-देन दर्ज करने के लिए "भुगतान / अग्रिम दर्ज करें" पर टैप करें।'
+                : 'Tap "Record Payment / Advance" to record transactions for labourers.',
+            style: TextStyle(color: colors.textSecondary),
+          ),
         ],
       ),
     );
@@ -988,6 +1043,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
 
   // ─── 5. SITE KHARCHA TAB ──────────────────────────────────────────────────
   Widget _buildSiteKharchaTab() {
+    final colors = AppTheme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -1000,15 +1056,15 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Site Kharcha (Labour Expense)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(_tr('Site Kharcha (Labour Expense)'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary)),
                     const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: _showRecordKharchaModal,
                         icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Record Site Kharcha'),
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0453CD), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                        label: Text(_tr('Record Site Kharcha')),
+                        style: ElevatedButton.styleFrom(backgroundColor: colors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
                       ),
                     ),
                   ],
@@ -1017,12 +1073,12 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Site Kharcha (Labour Expense)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(_tr('Site Kharcha (Labour Expense)'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary)),
                   ElevatedButton.icon(
                     onPressed: _showRecordKharchaModal,
                     icon: const Icon(Icons.add),
-                    label: const Text('Record Site Kharcha'),
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0453CD), foregroundColor: Colors.white),
+                    label: Text(_tr('Record Site Kharcha')),
+                    style: ElevatedButton.styleFrom(backgroundColor: colors.primary, foregroundColor: Colors.white),
                   ),
                 ],
               );
@@ -1031,7 +1087,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
           const SizedBox(height: 16),
 
           if (_expenses.isEmpty)
-            const Center(child: Text('No Site Kharcha recorded yet.'))
+            Center(child: Text(_tr('No Site Kharcha recorded yet.'), style: TextStyle(color: colors.textSecondary)))
           else
             ListView.separated(
               shrinkWrap: true,
@@ -1051,8 +1107,8 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                       backgroundColor: Color(0xFF8B5CF6),
                       child: Icon(Icons.local_cafe, color: Colors.white),
                     ),
-                    title: Text('$category (₹$amount)', style: const TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                    subtitle: Text('$dateStr${desc.isNotEmpty ? ' • $desc' : ''}', overflow: TextOverflow.ellipsis),
+                    title: Text('${_tr(category)} (₹$amount)', style: TextStyle(fontWeight: FontWeight.bold, color: colors.textPrimary), overflow: TextOverflow.ellipsis),
+                    subtitle: Text('$dateStr${desc.isNotEmpty ? ' • $desc' : ''}', style: TextStyle(color: colors.textSecondary), overflow: TextOverflow.ellipsis),
                     trailing: Text('₹$amount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF8B5CF6))),
                   ),
                 );
@@ -1065,78 +1121,79 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
 
   // ─── 6. REPORTS TAB ───────────────────────────────────────────────────────
   Widget _buildReportsTab() {
+    final colors = AppTheme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Monthly Labour Ledger Report', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(_tr('Monthly Labour Ledger Report'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary)),
           const SizedBox(height: 12),
           if (_monthlyReport.isEmpty)
-            const Text('No monthly report data available.')
+            Text(_tr('No monthly report data available.'), style: TextStyle(color: colors.textSecondary))
           else
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingRowColor: WidgetStateProperty.all(const Color(0xFF041627)),
-                headingTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                columns: const [
-                  DataColumn(label: Text('Labour Name')),
-                  DataColumn(label: Text('Type')),
-                  DataColumn(label: Text('Dihadi Rate')),
-                  DataColumn(label: Text('Total Dihadi')),
-                  DataColumn(label: Text('Total Earned')),
-                  DataColumn(label: Text('Total Paid')),
-                  DataColumn(label: Text('Advance')),
-                  DataColumn(label: Text('Outstanding')),
+                headingRowColor: WidgetStateProperty.all(colors.isDark ? colors.surfaceSubtle : const Color(0xFF041627)),
+                headingTextStyle: TextStyle(color: colors.isDark ? colors.textPrimary : Colors.white, fontWeight: FontWeight.bold),
+                columns: [
+                  DataColumn(label: Text(_tr('Labour Name'))),
+                  DataColumn(label: Text(_tr('Type'))),
+                  DataColumn(label: Text(_tr('Dihadi Rate'))),
+                  DataColumn(label: Text(_tr('Total Dihadi'))),
+                  DataColumn(label: Text(_tr('Total Earned'))),
+                  DataColumn(label: Text(_tr('Total Paid'))),
+                  DataColumn(label: Text(_tr('Advance'))),
+                  DataColumn(label: Text(_tr('Outstanding'))),
                 ],
                 rows: _monthlyReport.map((row) {
                   return DataRow(cells: [
-                    DataCell(Text(row['name'] ?? '')),
-                    DataCell(Text(row['labourType'] ?? '')),
-                    DataCell(Text('₹${row['dihadiRate'] ?? 0}')),
-                    DataCell(Text('${row['totalDihadi'] ?? 0}')),
-                    DataCell(Text('₹${row['totalEarned'] ?? 0}', style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold))),
-                    DataCell(Text('₹${row['totalPaid'] ?? 0}', style: const TextStyle(color: Colors.green))),
-                    DataCell(Text('₹${row['totalAdvance'] ?? 0}', style: const TextStyle(color: Colors.orange))),
-                    DataCell(Text('₹${row['outstanding'] ?? 0}', style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold))),
+                    DataCell(Text(row['name'] ?? '', style: TextStyle(color: colors.textPrimary))),
+                    DataCell(Text(_tr(row['labourType'] ?? ''), style: TextStyle(color: colors.textPrimary))),
+                    DataCell(Text('₹${row['dihadiRate'] ?? 0}', style: TextStyle(color: colors.textPrimary))),
+                    DataCell(Text('${row['totalDihadi'] ?? 0}', style: TextStyle(color: colors.textPrimary))),
+                    DataCell(Text('₹${row['totalEarned'] ?? 0}', style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold))),
+                    DataCell(Text('₹${row['totalPaid'] ?? 0}', style: TextStyle(color: colors.success))),
+                    DataCell(Text('₹${row['totalAdvance'] ?? 0}', style: TextStyle(color: colors.warning))),
+                    DataCell(Text('₹${row['outstanding'] ?? 0}', style: TextStyle(color: colors.error, fontWeight: FontWeight.bold))),
                   ]);
                 }).toList(),
               ),
             ),
           const SizedBox(height: 24),
-          const Text('Site-Level Labour & Expense Report', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(_tr('Site-Level Labour & Expense Report'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colors.textPrimary)),
           const SizedBox(height: 12),
           if (_siteReport.isEmpty)
-            const Text('No site report data available.')
+            Text(_tr('No site report data available.'), style: TextStyle(color: colors.textSecondary))
           else
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingRowColor: WidgetStateProperty.all(const Color(0xFF0453CD)),
-                headingTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                columns: const [
-                  DataColumn(label: Text('Site Name')),
-                  DataColumn(label: Text('Total Labour')),
-                  DataColumn(label: Text('Carigar')),
-                  DataColumn(label: Text('Helper')),
-                  DataColumn(label: Text('Total Dihadi')),
-                  DataColumn(label: Text('Total Earned')),
-                  DataColumn(label: Text('Total Paid')),
-                  DataColumn(label: Text('Site Kharcha')),
-                  DataColumn(label: Text('Total Labour Cost')),
+                headingRowColor: WidgetStateProperty.all(colors.isDark ? colors.surfaceSubtle : const Color(0xFF0453CD)),
+                headingTextStyle: TextStyle(color: colors.isDark ? colors.textPrimary : Colors.white, fontWeight: FontWeight.bold),
+                columns: [
+                  DataColumn(label: Text(_tr('Site Name'))),
+                  DataColumn(label: Text(_tr('Total Labour'))),
+                  DataColumn(label: Text(_tr('Carigar'))),
+                  DataColumn(label: Text(_tr('Helper'))),
+                  DataColumn(label: Text(_tr('Total Dihadi'))),
+                  DataColumn(label: Text(_tr('Total Earned'))),
+                  DataColumn(label: Text(_tr('Total Paid'))),
+                  DataColumn(label: Text(_tr('Site Kharcha'))),
+                  DataColumn(label: Text(_tr('Total Labour Cost'))),
                 ],
                 rows: _siteReport.map((row) {
                   return DataRow(cells: [
-                    DataCell(Text(row['siteName'] ?? '')),
-                    DataCell(Text('${row['totalLabour'] ?? 0}')),
-                    DataCell(Text('${row['carigar'] ?? 0}')),
-                    DataCell(Text('${row['helper'] ?? 0}')),
-                    DataCell(Text('${row['totalDihadi'] ?? 0}')),
-                    DataCell(Text('₹${row['totalEarned'] ?? 0}', style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold))),
-                    DataCell(Text('₹${row['totalPaid'] ?? 0}', style: const TextStyle(color: Colors.green))),
+                    DataCell(Text(row['siteName'] ?? '', style: TextStyle(color: colors.textPrimary))),
+                    DataCell(Text('${row['totalLabour'] ?? 0}', style: TextStyle(color: colors.textPrimary))),
+                    DataCell(Text('${row['carigar'] ?? 0}', style: TextStyle(color: colors.textPrimary))),
+                    DataCell(Text('${row['helper'] ?? 0}', style: TextStyle(color: colors.textPrimary))),
+                    DataCell(Text('${row['totalDihadi'] ?? 0}', style: TextStyle(color: colors.textPrimary))),
+                    DataCell(Text('₹${row['totalEarned'] ?? 0}', style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold))),
+                    DataCell(Text('₹${row['totalPaid'] ?? 0}', style: TextStyle(color: colors.success))),
                     DataCell(Text('₹${row['siteKharcha'] ?? 0}', style: const TextStyle(color: Colors.purple, fontWeight: FontWeight.bold))),
-                    DataCell(Text('₹${row['totalLabourCost'] ?? 0}', style: const TextStyle(color: Color(0xFF0453CD), fontWeight: FontWeight.bold))),
+                    DataCell(Text('₹${row['totalLabourCost'] ?? 0}', style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold))),
                   ]);
                 }).toList(),
               ),
@@ -1163,22 +1220,21 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
           return AlertDialog(
-            
-            title: const Text('Add New Labourer'),
+            title: Text(_tr('Add New Labourer')),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Full Name *')),
+                  TextField(controller: nameCtrl, decoration: InputDecoration(labelText: _tr('Full Name *'))),
                   const SizedBox(height: 12),
-                  TextField(controller: mobileCtrl, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Mobile Number')),
+                  TextField(controller: mobileCtrl, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: _tr('Mobile Number'))),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: type,
-                    decoration: const InputDecoration(labelText: 'Labour Type *'),
-                    items: const [
-                      DropdownMenuItem(value: 'Carigar', child: Text('Carigar')),
-                      DropdownMenuItem(value: 'Helper', child: Text('Helper')),
+                    decoration: InputDecoration(labelText: _tr('Labour Type *')),
+                    items: [
+                      DropdownMenuItem(value: 'Carigar', child: Text(_tr('Carigar'))),
+                      DropdownMenuItem(value: 'Helper', child: Text(_tr('Helper'))),
                     ],
                     onChanged: (val) {
                       if (val != null) {
@@ -1190,31 +1246,31 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                     },
                   ),
                   const SizedBox(height: 12),
-                  TextField(controller: rateCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Dihadi Rate (₹) *')),
+                  TextField(controller: rateCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _tr('Dihadi Rate (₹) *'))),
                   const SizedBox(height: 12),
                   if (_sites.isNotEmpty)
                     DropdownButtonFormField<String>(
                       value: siteId ?? _sites.first.id,
-                      decoration: const InputDecoration(labelText: 'Site/Project'),
+                      decoration: InputDecoration(labelText: _tr('Site/Project')),
                       items: _sites.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
                       onChanged: (val) => setModalState(() => siteId = val),
                     ),
                   const SizedBox(height: 12),
-                  TextField(controller: contractorCtrl, decoration: const InputDecoration(labelText: 'Contractor/Supervisor')),
+                  TextField(controller: contractorCtrl, decoration: InputDecoration(labelText: _tr('Contractor/Supervisor'))),
                   const SizedBox(height: 12),
-                  TextField(controller: notesCtrl, decoration: const InputDecoration(labelText: 'Notes')),
+                  TextField(controller: notesCtrl, decoration: InputDecoration(labelText: _tr('Notes'))),
                 ],
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_tr('Cancel'))),
               ElevatedButton(
                 onPressed: isSaving
                     ? null
                     : () async {
                         if (nameCtrl.text.trim().isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please enter labour full name'), backgroundColor: Colors.red),
+                            SnackBar(content: Text(_tr('Please enter labour full name')), backgroundColor: Colors.red),
                           );
                           return;
                         }
@@ -1237,7 +1293,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(res['message'] ?? 'Labour added successfully!'),
+                              content: Text(res['message'] ?? _tr('Labour added successfully!')),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -1246,7 +1302,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                           setModalState(() => isSaving = false);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(res['message'] ?? 'Failed to save labour'),
+                              content: Text(res['message'] ?? _tr('Failed to save labour')),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -1254,7 +1310,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                       },
                 child: isSaving
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Save Labour'),
+                    : Text(_tr('Save Labour')),
               ),
             ],
           );
@@ -1276,64 +1332,64 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
           return AlertDialog(
-            title: const Text('Record Payment / Advance'),
+            title: Text(_tr('Record Payment / Advance')),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
                     value: selectedLabourId,
-                    decoration: const InputDecoration(labelText: 'Select Labour *'),
+                    decoration: InputDecoration(labelText: _tr('Select Labour *')),
                     items: _labours.map((l) => DropdownMenuItem(value: l['_id'].toString(), child: Text(l['name']))).toList(),
                     onChanged: (val) => setModalState(() => selectedLabourId = val),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: pmtType,
-                    decoration: const InputDecoration(labelText: 'Payment Type *'),
-                    items: const [
-                      DropdownMenuItem(value: 'Wage Payment', child: Text('Wage Payment')),
-                      DropdownMenuItem(value: 'Advance', child: Text('Advance')),
-                      DropdownMenuItem(value: 'Deduction', child: Text('Deduction')),
-                      DropdownMenuItem(value: 'Adjustment', child: Text('Adjustment')),
+                    decoration: InputDecoration(labelText: _tr('Payment Type *')),
+                    items: [
+                      DropdownMenuItem(value: 'Wage Payment', child: Text(_tr('Wage Payment'))),
+                      DropdownMenuItem(value: 'Advance', child: Text(_tr('Advance'))),
+                      DropdownMenuItem(value: 'Deduction', child: Text(_tr('Deduction'))),
+                      DropdownMenuItem(value: 'Adjustment', child: Text(_tr('Adjustment'))),
                     ],
                     onChanged: (val) => setModalState(() => pmtType = val!),
                   ),
                   const SizedBox(height: 12),
-                  TextField(controller: amountCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Amount (₹) *')),
+                  TextField(controller: amountCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _tr('Amount (₹) *'))),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: pmtMethod,
-                    decoration: const InputDecoration(labelText: 'Payment Method'),
-                    items: const [
-                      DropdownMenuItem(value: 'Cash', child: Text('Cash')),
-                      DropdownMenuItem(value: 'UPI', child: Text('UPI')),
-                      DropdownMenuItem(value: 'Bank Transfer', child: Text('Bank Transfer')),
-                      DropdownMenuItem(value: 'Cheque', child: Text('Cheque')),
+                    decoration: InputDecoration(labelText: _tr('Payment Method')),
+                    items: [
+                      DropdownMenuItem(value: 'Cash', child: Text(_tr('Cash'))),
+                      DropdownMenuItem(value: 'UPI', child: Text(_tr('UPI'))),
+                      DropdownMenuItem(value: 'Bank Transfer', child: Text(_tr('Bank Transfer'))),
+                      DropdownMenuItem(value: 'Cheque', child: Text(_tr('Cheque'))),
                     ],
                     onChanged: (val) => setModalState(() => pmtMethod = val!),
                   ),
                   const SizedBox(height: 12),
-                  TextField(controller: notesCtrl, decoration: const InputDecoration(labelText: 'Notes / Description')),
+                  TextField(controller: notesCtrl, decoration: InputDecoration(labelText: _tr('Notes / Description'))),
                 ],
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_tr('Cancel'))),
               ElevatedButton(
                 onPressed: isSaving
                     ? null
                     : () async {
                         if (selectedLabourId == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please select a labourer'), backgroundColor: Colors.red),
+                            SnackBar(content: Text(_tr('Please select a labourer')), backgroundColor: Colors.red),
                           );
                           return;
                         }
                         final amt = double.tryParse(amountCtrl.text) ?? 0;
                         if (amt <= 0) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please enter a valid amount'), backgroundColor: Colors.red),
+                            SnackBar(content: Text(_tr('Please enter a valid amount')), backgroundColor: Colors.red),
                           );
                           return;
                         }
@@ -1354,19 +1410,19 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                         if (res['success'] == true) {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(res['message'] ?? 'Payment recorded successfully!'), backgroundColor: Colors.green),
+                            SnackBar(content: Text(res['message'] ?? _tr('Payment recorded successfully!')), backgroundColor: Colors.green),
                           );
                           _refreshAllTabs();
                         } else {
                           setModalState(() => isSaving = false);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(res['message'] ?? 'Failed to record payment'), backgroundColor: Colors.red),
+                            SnackBar(content: Text(res['message'] ?? _tr('Failed to record payment')), backgroundColor: Colors.red),
                           );
                         }
                       },
                 child: isSaving
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Record Payment'),
+                    : Text(_tr('Record Payment')),
               ),
             ],
           );
@@ -1387,46 +1443,46 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
           return AlertDialog(
-            title: const Text('Record Site Kharcha'),
+            title: Text(_tr('Record Site Kharcha')),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
                     value: category,
-                    decoration: const InputDecoration(labelText: 'Category *'),
-                    items: const [
-                      DropdownMenuItem(value: 'Food', child: Text('Food')),
-                      DropdownMenuItem(value: 'Tea/Water', child: Text('Tea/Water')),
-                      DropdownMenuItem(value: 'Transportation', child: Text('Transportation')),
-                      DropdownMenuItem(value: 'Accommodation', child: Text('Accommodation')),
-                      DropdownMenuItem(value: 'Tools', child: Text('Tools')),
-                      DropdownMenuItem(value: 'Safety Equipment', child: Text('Safety Equipment')),
-                      DropdownMenuItem(value: 'Medical', child: Text('Medical')),
-                      DropdownMenuItem(value: 'Other', child: Text('Other')),
+                    decoration: InputDecoration(labelText: _tr('Category *')),
+                    items: [
+                      DropdownMenuItem(value: 'Food', child: Text(_tr('Food'))),
+                      DropdownMenuItem(value: 'Tea/Water', child: Text(_tr('Tea/Water'))),
+                      DropdownMenuItem(value: 'Transportation', child: Text(_tr('Transportation'))),
+                      DropdownMenuItem(value: 'Accommodation', child: Text(_tr('Accommodation'))),
+                      DropdownMenuItem(value: 'Tools', child: Text(_tr('Tools'))),
+                      DropdownMenuItem(value: 'Safety Equipment', child: Text(_tr('Safety Equipment'))),
+                      DropdownMenuItem(value: 'Medical', child: Text(_tr('Medical'))),
+                      DropdownMenuItem(value: 'Other', child: Text(_tr('Other'))),
                     ],
                     onChanged: (val) => setModalState(() => category = val!),
                   ),
                   const SizedBox(height: 12),
-                  TextField(controller: amountCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Amount (₹) *')),
+                  TextField(controller: amountCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _tr('Amount (₹) *'))),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: pmtMethod,
-                    decoration: const InputDecoration(labelText: 'Payment Method'),
-                    items: const [
-                      DropdownMenuItem(value: 'Cash', child: Text('Cash')),
-                      DropdownMenuItem(value: 'UPI', child: Text('UPI')),
-                      DropdownMenuItem(value: 'Bank Transfer', child: Text('Bank Transfer')),
+                    decoration: InputDecoration(labelText: _tr('Payment Method')),
+                    items: [
+                      DropdownMenuItem(value: 'Cash', child: Text(_tr('Cash'))),
+                      DropdownMenuItem(value: 'UPI', child: Text(_tr('UPI'))),
+                      DropdownMenuItem(value: 'Bank Transfer', child: Text(_tr('Bank Transfer'))),
                     ],
                     onChanged: (val) => setModalState(() => pmtMethod = val!),
                   ),
                   const SizedBox(height: 12),
-                  TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Description / Notes')),
+                  TextField(controller: descCtrl, decoration: InputDecoration(labelText: _tr('Description / Notes'))),
                 ],
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_tr('Cancel'))),
               ElevatedButton(
                 onPressed: isSaving
                     ? null
@@ -1434,7 +1490,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                         final amt = double.tryParse(amountCtrl.text) ?? 0;
                         if (amt <= 0) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please enter a valid amount'), backgroundColor: Colors.red),
+                            SnackBar(content: Text(_tr('Please enter a valid amount')), backgroundColor: Colors.red),
                           );
                           return;
                         }
@@ -1454,19 +1510,19 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                         if (res['success'] == true) {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(res['message'] ?? 'Site kharcha saved successfully!'), backgroundColor: Colors.green),
+                            SnackBar(content: Text(res['message'] ?? _tr('Site kharcha saved successfully!')), backgroundColor: Colors.green),
                           );
                           _refreshAllTabs();
                         } else {
                           setModalState(() => isSaving = false);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(res['message'] ?? 'Failed to save site kharcha'), backgroundColor: Colors.red),
+                            SnackBar(content: Text(res['message'] ?? _tr('Failed to save site kharcha')), backgroundColor: Colors.red),
                           );
                         }
                       },
                 child: isSaving
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Save Kharcha'),
+                    : Text(_tr('Save Kharcha')),
               ),
             ],
           );

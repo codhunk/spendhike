@@ -6,6 +6,7 @@ import '../models/app_models.dart';
 import 'data_sync_notifier.dart';
 import 'session_manager.dart';
 import 'passcode_service.dart';
+import 'biometric_service.dart';
 import '../main.dart';
 
 /// Central Live API Service handling HTTP REST communication with SpendHike Node.js/MongoDB Backend.
@@ -63,6 +64,7 @@ class ApiService {
 
   static String? get authToken => _authToken;
   static UserModel? get currentUser => _currentUser;
+  static bool get isLoggedIn => _currentUser != null || (_authToken != null && _authToken!.isNotEmpty);
 
   static void setAuthToken(String? token) {
     _authToken = token;
@@ -85,6 +87,7 @@ class ApiService {
     _currentUser = null;
     await SessionManager.clearSession();
     await PasscodeService.clearPasscode();
+    await BiometricService.clearBiometricPreference();
   }
 
 

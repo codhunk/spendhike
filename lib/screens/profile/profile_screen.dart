@@ -7,6 +7,9 @@ import '../../services/cloudinary_service.dart';
 import '../../services/data_sync_notifier.dart';
 import '../auth/change_passcode_screen.dart';
 import '../auth/create_passcode_screen.dart';
+import '../../services/biometric_service.dart';
+import '../../config/app_theme.dart';
+import '../../widgets/theme_switcher.dart';
 
 
 class ProfileScreen extends StatefulWidget {
@@ -37,11 +40,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     lastSync: 'Live Connected',
   );
 
+  bool _isBiometricHardwareAvailable = false;
+  bool _isBiometricEnrolled = false;
+  String _deviceBiometricLabel = 'Biometrics';
+  bool _biometricSettingEnabled = false;
+
   @override
   void initState() {
     super.initState();
     DataSyncNotifier.instance.addListener(_loadProfileFromApi);
     _loadProfileFromApi();
+    _checkBiometricAvailability();
+  }
+
+  Future<void> _checkBiometricAvailability() async {
+    final isSupported = await BiometricService.isDeviceSupported();
+    final biometrics = await BiometricService.getAvailableBiometrics();
+    final bioLabel = await BiometricService.getBiometricTypeLabel();
+    final enabled = await BiometricService.isBiometricEnabled();
+
+    if (mounted) {
+      setState(() {
+        _isBiometricHardwareAvailable = isSupported;
+        _isBiometricEnrolled = biometrics.isNotEmpty;
+        _deviceBiometricLabel = bioLabel;
+        _biometricSettingEnabled = enabled;
+      });
+    }
   }
 
   @override
@@ -178,14 +203,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileHeader(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = AppTheme.of(context);
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2C) : Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFC4C6CD)),
+        border: Border.all(color: colors.border),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -201,11 +226,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: isDesktop ? 128 : 96,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFF0453CD), width: 3),
+                      border: Border.all(color: colors.primary, width: 3),
                     ),
                     child: CircleAvatar(
                       radius: isDesktop ? 60 : 45,
-                      backgroundColor: const Color(0xFFEFF4FF),
+                      backgroundColor: colors.surfaceSubtle,
                       backgroundImage: _user.avatarUrl.isNotEmpty
                           ? NetworkImage(_user.avatarUrl)
                           : null,
@@ -214,10 +239,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               _user.name.isNotEmpty
                                   ? _user.name.substring(0, 1).toUpperCase()
                                   : 'J',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 36,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF0453CD),
+                                color: colors.primary,
                               ),
                             )
                           : null,
@@ -231,9 +256,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0453CD),
+                          color: colors.primary,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(color: colors.surface, width: 2),
                         ),
                         child: const Icon(Icons.edit, size: 16, color: Colors.white),
                       ),
@@ -253,7 +278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF0B1C30),
+                        color: colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -262,13 +287,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           isDesktop ? MainAxisAlignment.start : MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.corporate_fare, size: 16, color: Color(0xFF0453CD)),
+                        Icon(Icons.corporate_fare, size: 16, color: colors.primary),
                         const SizedBox(width: 8),
                         Text(
-                          _user.company.isNotEmpty ? _user.company : 'Personal Account',
+                          _user.company.isNotEmpty ? _user.company : _tr('Personal Account'),
                           style: TextStyle(
                             fontSize: 16,
-                            color: isDark ? Colors.white70 : const Color(0xFF44474C),
+                            color: colors.textSecondary,
                           ),
                         ),
                       ],
@@ -280,13 +305,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       alignment: isDesktop ? WrapAlignment.start : WrapAlignment.center,
                       children: [
                         _buildChip(
-                          _user.email.isNotEmpty ? _user.email : 'Verified Account',
-                          const Color(0xFFD3E4FE),
-                          const Color(0xFF0453CD),
+                          _user.email.isNotEmpty ? _user.email : _tr('Verified Account'),
+                          colors.primary.withValues(alpha: 0.15),
+                          colors.primary,
                         ),
                         _buildChip(
                           _user.plan,
-                          const Color(0xFF0453CD),
+                          colors.primary,
                           Colors.white,
                         ),
                       ],
@@ -300,8 +325,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: const Icon(Icons.edit_outlined, size: 18),
                 label: Text(_tr('Edit Profile')),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF0453CD),
-                  side: const BorderSide(color: Color(0xFFC4C6CD)),
+                  foregroundColor: colors.primary,
+                  side: BorderSide(color: colors.border),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
@@ -323,12 +348,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildSettingsGroup(String title, IconData icon, List<Widget> children) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = AppTheme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2C) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFC4C6CD)),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -336,22 +361,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2A2A3C) : const Color(0xFFEFF4FF),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              color: colors.surfaceSubtle,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               border: Border(
-                bottom: BorderSide(color: isDark ? Colors.white12 : const Color(0xFFC4C6CD)),
+                bottom: BorderSide(color: colors.border),
               ),
             ),
             child: Row(
               children: [
-                Icon(icon, color: const Color(0xFF0453CD)),
+                Icon(icon, color: colors.primary),
                 const SizedBox(width: 12),
                 Text(
                   _tr(title),
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : const Color(0xFF0B1C30),
+                    color: colors.textPrimary,
                   ),
                 ),
               ],
@@ -373,27 +398,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Widget? trailing,
     VoidCallback? onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = AppTheme.of(context);
     return ListTile(
-      leading: Icon(icon, color: isDark ? Colors.white70 : const Color(0xFF44474C)),
+      leading: Icon(icon, color: colors.primary),
       title: Text(
         _tr(title),
         style: TextStyle(
-          fontSize: 16,
-          color: isDark ? Colors.white : const Color(0xFF0B1C30),
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          color: colors.textPrimary,
         ),
       ),
       subtitle: subtitle != null
           ? Text(
               subtitle,
               style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white60 : const Color(0xFF44474C),
+                fontSize: 13,
+                color: colors.textSecondary,
               ),
             )
           : null,
-      trailing: trailing ?? Icon(Icons.chevron_right, color: isDark ? Colors.white38 : const Color(0xFF74777D)),
+      trailing: trailing ?? Icon(Icons.chevron_right, color: colors.textMuted),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       onTap: onTap ?? () {},
     );
@@ -407,19 +432,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _buildSettingItem(
           icon: Icons.article_outlined,
           title: 'GST Number',
-          subtitle: _user.gst.isNotEmpty ? _user.gst : 'Add GST Identification',
+          subtitle: _user.gst.isNotEmpty ? _user.gst : _tr('Add GST Identification'),
           onTap: () => _showEditSingleFieldDialog('GST Number', 'gst', _user.gst),
         ),
         _buildSettingItem(
           icon: Icons.location_on_outlined,
           title: 'Business Address',
-          subtitle: _user.address.isNotEmpty ? _user.address : 'Add Business Address',
+          subtitle: _user.address.isNotEmpty ? _user.address : _tr('Add Business Address'),
           onTap: () => _showEditSingleFieldDialog('Business Address', 'address', _user.address),
         ),
         _buildSettingItem(
           icon: Icons.store_outlined,
           title: 'Company Name',
-          subtitle: _user.company.isNotEmpty ? _user.company : 'Add Company Name',
+          subtitle: _user.company.isNotEmpty ? _user.company : _tr('Add Company Name'),
           onTap: () => _showEditSingleFieldDialog('Company Name', 'company', _user.company),
         ),
       ],
@@ -427,32 +452,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildAppSettings() {
+    final colors = AppTheme.of(context);
+    final themeTitle = switch (AppSettings.instance.themeMode) {
+      ThemeMode.light => _tr('Light Mode'),
+      ThemeMode.dark => _tr('Dark Mode'),
+      ThemeMode.system => _tr('System Default'),
+    };
+    final themeIcon = switch (AppSettings.instance.themeMode) {
+      ThemeMode.light => Icons.light_mode_rounded,
+      ThemeMode.dark => Icons.dark_mode_rounded,
+      ThemeMode.system => Icons.brightness_auto_rounded,
+    };
+
     return _buildSettingsGroup(
       'App Settings',
       Icons.settings_applications,
       [
         _buildSettingItem(
-          icon: Icons.dark_mode_outlined,
-          title: 'Dark Mode',
-          trailing: Switch(
-            value: AppSettings.instance.isDarkMode,
-            onChanged: (val) {
-              AppSettings.instance.setTheme(val);
-              _updateProfileField({'darkMode': val});
-              _showSnackBar(val ? 'Dark Mode Enabled' : 'Light Mode Enabled');
-            },
-            activeColor: const Color(0xFF0453CD),
+          icon: themeIcon,
+          title: 'Theme Mode',
+          subtitle: themeTitle,
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  themeTitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.primary,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.unfold_more, size: 16, color: colors.primary),
+              ],
+            ),
           ),
+          onTap: () async {
+            await showThemeSelectionDialog(context);
+            _updateProfileField({'darkMode': AppSettings.instance.isDarkMode});
+          },
         ),
         _buildSettingItem(
           icon: Icons.translate,
           title: 'Language',
-          trailing: Text(
-            AppSettings.instance.isHindi ? 'Hindi (हिन्दी)' : 'English (IN)',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0453CD),
+          subtitle: AppSettings.instance.isHindi ? 'Hindi (हिन्दी)' : 'English (IN)',
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  AppSettings.instance.isHindi ? 'हिन्दी' : 'English',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.primary,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.unfold_more, size: 16, color: colors.primary),
+              ],
             ),
           ),
           onTap: () => _showLanguageDialog(),
@@ -469,7 +539,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _buildSettingItem(
           icon: Icons.lock_outline,
           title: 'Passcode Lock',
-          subtitle: _user.passcodeConfigured ? 'Passcode Enabled' : 'Configure Passcode',
+          subtitle: _user.passcodeConfigured ? _tr('Passcode Enabled') : _tr('Configure Passcode'),
           trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF94A3B8)),
           onTap: () {
             if (_user.passcodeConfigured) {
@@ -489,7 +559,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildSettingItem(
             icon: Icons.key_outlined,
             title: 'Change Passcode',
-            subtitle: 'Update your 4 or 6-digit passcode',
+            subtitle: _tr('Update your 4 or 6-digit passcode'),
             onTap: () {
               Navigator.push(
                 context,
@@ -498,13 +568,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
           ),
         _buildSettingItem(
-          icon: Icons.fingerprint,
-          title: 'Biometric Unlock',
+          icon: _deviceBiometricLabel == 'Face ID' ? Icons.face : Icons.fingerprint,
+          title: '$_deviceBiometricLabel Unlock',
+          subtitle: !_isBiometricHardwareAvailable
+              ? _tr('Not supported on this device')
+              : !_isBiometricEnrolled
+                  ? _tr('No biometrics enrolled')
+                  : _biometricSettingEnabled
+                      ? _tr('Biometric Unlock Enabled')
+                      : _tr('Biometric Unlock Disabled'),
           trailing: Switch(
-            value: _user.biometricEnabled,
+            value: _isBiometricHardwareAvailable && _isBiometricEnrolled && _biometricSettingEnabled,
+            onChanged: (!_isBiometricHardwareAvailable || !_isBiometricEnrolled)
+                ? null
+                : (val) async {
+                    final reason = val
+                        ? _tr('Authenticate to enable biometric unlock')
+                        : _tr('Authenticate to disable biometric unlock');
+                    final authResult = await BiometricService.authenticate(localizedReason: reason);
+
+                    if (authResult.success) {
+                      await BiometricService.setBiometricEnabled(val);
+                      setState(() {
+                        _biometricSettingEnabled = val;
+                      });
+                      _updateProfileField({'biometricEnabled': val});
+                      _showSnackBar(val ? _tr('Biometric unlock enabled') : _tr('Biometric unlock disabled'));
+                    } else if (!authResult.isCancelled) {
+                      _showSnackBar(_tr(authResult.errorMessage ?? 'Biometric authentication failed'));
+                    }
+                  },
+            activeColor: const Color(0xFF0453CD),
+          ),
+        ),
+        _buildSettingItem(
+          icon: Icons.dialpad,
+          title: 'PIN Code Unlock',
+          subtitle: _user.pinEnabled ? _tr('PIN Unlock Active') : _tr('Set 4-digit PIN'),
+          trailing: Switch(
+            value: _user.pinEnabled,
             onChanged: (val) {
-              _updateProfileField({'biometricEnabled': val});
-              _showSnackBar(val ? 'Biometric unlock enabled' : 'Biometric unlock disabled');
+              if (val) {
+                _showPinChangeDialog();
+              } else {
+                _updateProfileField({'pinEnabled': false});
+                _showSnackBar(_tr('PIN unlock disabled'));
+              }
             },
             activeColor: const Color(0xFF0453CD),
           ),
@@ -907,7 +1016,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
+            child: Text(_tr('Close')),
           ),
         ],
       ),
@@ -931,7 +1040,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
+            child: Text(_tr('Close')),
           ),
         ],
       ),
