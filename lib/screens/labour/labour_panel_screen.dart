@@ -44,15 +44,6 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
   bool _isSavingAttendance = false;
   List<Map<String, dynamic>> _recentAttendance = [];
 
-  // Reports State
-  int _reportMonth = DateTime.now().month;
-  final int _reportYear = DateTime.now().year;
-  String _reportStatusFilter = 'All'; // All, Present, Half Day, Absent
-  DateTime? _filterStartDate;
-  DateTime? _filterEndDate;
-  Map<String, dynamic> _reportSummary = {};
-  List<Map<String, dynamic>> _reportRecords = [];
-  bool _isLoadingReport = false;
 
   // Earnings State
   Map<String, dynamic> _earningsSummary = {};
@@ -118,33 +109,14 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
         }
       }
 
-      // 3. Load Reports & Earnings for initial state
+      // 3. Load Earnings for initial state
       if (_isRegistered) {
-        await _fetchAttendanceReport();
         await _fetchEarningsAndPayments();
       }
     } catch (e) {
       debugPrint('[LabourPanel] Error loading data: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _fetchAttendanceReport() async {
-    setState(() => _isLoadingReport = true);
-    final res = await ApiService.getLabourAttendanceReport(
-      month: _reportMonth,
-      year: _reportYear,
-      startDate: _filterStartDate?.toIso8601String().split('T').first,
-      endDate: _filterEndDate?.toIso8601String().split('T').first,
-      status: _reportStatusFilter == 'All' ? null : _reportStatusFilter,
-    );
-    if (mounted) {
-      setState(() {
-        _reportSummary = res['summary'] ?? {};
-        _reportRecords = res['records'] ?? [];
-        _isLoadingReport = false;
-      });
     }
   }
 
@@ -260,15 +232,18 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
+                      runSpacing: 8,
                       children: [
-                        {'val': 1.0, 'label': 'Present (1.0)'},
-                        {'val': 0.5, 'label': 'Half Day (0.5)'},
-                        {'val': 0.0, 'label': 'Absent (0.0)'},
+                        {'val': 0.0, 'label': '0 (Absent)'},
+                        {'val': 0.5, 'label': '0.5 (Half Day)'},
+                        {'val': 1.0, 'label': '1.0 (Full Day)'},
+                        {'val': 1.5, 'label': '1.5 Dihadi'},
+                        {'val': 2.0, 'label': '2.0 Dihadi'},
                       ].map((item) {
                         final val = item['val'] as double;
                         final isSel = correctionDihadi == val;
                         return ChoiceChip(
-                          label: Text(item['label'] as String, style: TextStyle(fontSize: 12, color: isSel ? Colors.white : colors.textPrimary)),
+                          label: Text(item['label'] as String, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isSel ? Colors.white : colors.textPrimary)),
                           selected: isSel,
                           selectedColor: colors.primary,
                           backgroundColor: colors.surfaceSubtle,
@@ -407,7 +382,12 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
   }
 
   // ─── APP BAR ───────────────────────────────────────────────────────────────
+  // ─── APP BAR ───────────────────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar(AppSemanticColors colors) {
+    final labour = _labourProfile ?? _dashboardData?['labour'] ?? {};
+    final labourName = labour['name'] ?? 'Worker';
+    final labourId = labour['labourId'] ?? '';
+
     return AppBar(
       title: Row(
         children: [
@@ -417,7 +397,7 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
               color: colors.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.engineering, color: colors.primary, size: 20),
+            child: Icon(Icons.badge_outlined, color: colors.primary, size: 20),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -425,12 +405,12 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _tr('Labour Management Panel'),
+                  _tr('Labour Self Panel'),
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: colors.textPrimary),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  '📍 $_selectedSiteName',
+                  '$labourName${labourId.isNotEmpty ? ' ($labourId)' : ''} • ${_tr("Group")}: $_selectedSiteName',
                   style: TextStyle(fontSize: 11, color: colors.textSecondary),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -456,14 +436,14 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
     );
   }
 
-  // ─── DESKTOP SIDEBAR NAVIGATION (SECTION 8) ────────────────────────────────
+  // ─── DESKTOP SIDEBAR NAVIGATION ────────────────────────────────────────────
   Widget _buildDesktopLayout(AppSemanticColors colors) {
     return Row(
       children: [
         NavigationRail(
           selectedIndex: _currentTabIndex,
           onDestinationSelected: (idx) {
-            if (idx == 5) {
+            if (idx == 4) {
               _handleLogout();
             } else {
               setState(() => _currentTabIndex = idx);
@@ -478,7 +458,6 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
           destinations: [
             NavigationRailDestination(icon: const Icon(Icons.space_dashboard_outlined), selectedIcon: const Icon(Icons.space_dashboard), label: Text(_tr('Dashboard'))),
             NavigationRailDestination(icon: const Icon(Icons.how_to_reg_outlined), selectedIcon: const Icon(Icons.how_to_reg), label: Text(_tr('Attendance'))),
-            NavigationRailDestination(icon: const Icon(Icons.assessment_outlined), selectedIcon: const Icon(Icons.assessment), label: Text(_tr('Reports'))),
             NavigationRailDestination(icon: const Icon(Icons.account_balance_wallet_outlined), selectedIcon: const Icon(Icons.account_balance_wallet), label: Text(_tr('Earnings'))),
             NavigationRailDestination(icon: const Icon(Icons.person_outline), selectedIcon: const Icon(Icons.person), label: Text(_tr('Profile'))),
             NavigationRailDestination(icon: const Icon(Icons.logout, color: Colors.redAccent), label: Text(_tr('Logout'), style: const TextStyle(color: Colors.redAccent))),
@@ -490,7 +469,7 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
     );
   }
 
-  // ─── MOBILE BOTTOM NAVIGATION (5 TABS) ─────────────────────────────────────
+  // ─── MOBILE BOTTOM NAVIGATION (4 TABS) ─────────────────────────────────────
   Widget _buildBottomNavigationBar(AppSemanticColors colors) {
     return NavigationBar(
       selectedIndex: _currentTabIndex,
@@ -501,7 +480,6 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
       destinations: [
         NavigationDestination(icon: const Icon(Icons.space_dashboard_outlined), selectedIcon: Icon(Icons.space_dashboard, color: colors.primary), label: _tr('Dashboard')),
         NavigationDestination(icon: const Icon(Icons.how_to_reg_outlined), selectedIcon: Icon(Icons.how_to_reg, color: colors.primary), label: _tr('Attendance')),
-        NavigationDestination(icon: const Icon(Icons.assessment_outlined), selectedIcon: Icon(Icons.assessment, color: colors.primary), label: _tr('Reports')),
         NavigationDestination(icon: const Icon(Icons.account_balance_wallet_outlined), selectedIcon: Icon(Icons.account_balance_wallet, color: colors.primary), label: _tr('Earnings')),
         NavigationDestination(icon: const Icon(Icons.person_outline), selectedIcon: Icon(Icons.person, color: colors.primary), label: _tr('Profile')),
       ],
@@ -512,9 +490,8 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
     switch (_currentTabIndex) {
       case 0: return _buildDashboardTab(colors);
       case 1: return _buildAttendanceTab(colors);
-      case 2: return _buildReportsTab(colors);
-      case 3: return _buildEarningsTab(colors);
-      case 4: return _buildProfileTab(colors);
+      case 2: return _buildEarningsTab(colors);
+      case 3: return _buildProfileTab(colors);
       default: return _buildDashboardTab(colors);
     }
   }
@@ -526,22 +503,34 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
     final chartData = (_dashboardData?['monthlyChartData'] as List?) ?? [];
 
     final todayStatus = summary['todayAttendanceStatus'] ?? 'Not Marked';
-    final totalPresent = summary['totalPresentDays'] ?? 0;
-    final totalHalf = summary['totalHalfDays'] ?? 0;
-    final totalAbsent = summary['totalAbsentDays'] ?? 0;
+    final totalAttendanceDays = summary['totalAttendanceDays'] ?? summary['totalPresentDays'] ?? 0;
     final totalDihadi = (summary['totalDihadi'] ?? 0).toDouble();
-    final totalEarned = (summary['totalDihadiEarned'] ?? 0).toDouble();
-    final totalPaid = (summary['totalPaidAmount'] ?? 0).toDouble();
+    final totalEarned = (summary['totalEarned'] ?? summary['totalDihadiEarned'] ?? 0).toDouble();
+    final totalAdvance = (summary['totalAdvance'] ?? 0).toDouble();
+    final totalPaid = (summary['totalPaidAmount'] ?? summary['totalPaid'] ?? 0).toDouble();
     final pendingPayment = (summary['pendingPayment'] ?? 0).toDouble();
     final lastAttDate = summary['lastAttendanceDate'] != null ? summary['lastAttendanceDate'].toString().split('T').first : 'None';
 
     Color todayColor = Colors.grey;
+    String todayBadgeText = todayStatus;
     if (todayStatus == 'Present') {
       todayColor = Colors.green;
+      todayBadgeText = '1 Dihadi (Present)';
     } else if (todayStatus == 'Half Day') {
       todayColor = Colors.orange;
+      todayBadgeText = '0.5 Dihadi (Half Day)';
     } else if (todayStatus == 'Absent') {
       todayColor = Colors.red;
+      todayBadgeText = '0 Dihadi (Absent)';
+    } else if (summary['todayAttendance'] != null) {
+      final td = (summary['todayAttendance']['dihadi'] ?? 1.0).toDouble();
+      if (td == 2.0) {
+        todayColor = Colors.purple;
+        todayBadgeText = '2 Dihadi (Double)';
+      } else if (td == 1.5) {
+        todayColor = Colors.blue;
+        todayBadgeText = '1.5 Dihadi (Overtime)';
+      }
     }
 
     return RefreshIndicator(
@@ -585,9 +574,10 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
                               labour['name'] ?? 'Worker',
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
+                            const SizedBox(height: 3),
                             Text(
-                              'ID: ${labour["labourId"] ?? "LBR-001"} • Group: ${labour["siteName"] ?? _selectedSiteName}',
-                              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85)),
+                              'ID: ${labour["labourId"] ?? "LBR-001"} • ${_tr("Group")}: ${labour["siteName"] ?? _selectedSiteName}',
+                              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.9)),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
@@ -624,7 +614,7 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(color: todayColor, borderRadius: BorderRadius.circular(6)),
                             child: Text(
-                              todayStatus,
+                              todayBadgeText,
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                           ),
@@ -643,26 +633,60 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
 
             // Metrics Summary Grid (Section 3 Cards)
             Text(
-              _tr('Attendance & Payment Summary'),
+              _tr('Attendance, Earnings & Advances Summary'),
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.textPrimary),
             ),
             const SizedBox(height: 10),
             GridView.count(
-              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
               childAspectRatio: 1.45,
               children: [
-                _buildStatCard(title: _tr('Total Present'), value: '$totalPresent days', icon: Icons.check_circle, iconColor: Colors.green, colors: colors),
-                _buildStatCard(title: _tr('Total Half Days'), value: '$totalHalf days', icon: Icons.timelapse, iconColor: Colors.orange, colors: colors),
-                _buildStatCard(title: _tr('Total Absent'), value: '$totalAbsent days', icon: Icons.cancel, iconColor: Colors.red, colors: colors),
-                _buildStatCard(title: _tr('Total Dihadi'), value: '$totalDihadi days', icon: Icons.calendar_month, iconColor: Colors.blue, colors: colors),
-                _buildStatCard(title: _tr('Total Earned'), value: _formatCurrency(totalEarned), icon: Icons.monetization_on, iconColor: Colors.green.shade700, colors: colors),
-                _buildStatCard(title: _tr('Total Paid'), value: _formatCurrency(totalPaid), icon: Icons.payments, iconColor: Colors.teal, colors: colors),
-                _buildStatCard(title: _tr('Pending Payment'), value: _formatCurrency(pendingPayment), icon: Icons.pending_actions, iconColor: pendingPayment > 0 ? Colors.purple : Colors.grey, colors: colors),
-                _buildStatCard(title: _tr('Last Attendance'), value: lastAttDate, icon: Icons.history, iconColor: Colors.indigo, colors: colors),
+                _buildStatCard(
+                  title: _tr('Total Attendance'),
+                  value: '${totalDihadi.toStringAsFixed(totalDihadi % 1 == 0 ? 0 : 1)} Dihadi ($totalAttendanceDays Days)',
+                  icon: Icons.how_to_reg,
+                  iconColor: colors.primary,
+                  colors: colors,
+                ),
+                _buildStatCard(
+                  title: _tr('Total Earning'),
+                  value: _formatCurrency(totalEarned),
+                  icon: Icons.account_balance_wallet,
+                  iconColor: Colors.green.shade700,
+                  colors: colors,
+                ),
+                _buildStatCard(
+                  title: _tr('Total Advanced'),
+                  value: _formatCurrency(totalAdvance),
+                  icon: Icons.payments,
+                  iconColor: Colors.orange.shade800,
+                  colors: colors,
+                ),
+                _buildStatCard(
+                  title: _tr('Pending Payment'),
+                  value: _formatCurrency(pendingPayment),
+                  icon: Icons.pending_actions,
+                  iconColor: pendingPayment > 0 ? Colors.purple : Colors.grey,
+                  colors: colors,
+                ),
+                _buildStatCard(
+                  title: _tr('Total Paid'),
+                  value: _formatCurrency(totalPaid),
+                  icon: Icons.check_circle_outline,
+                  iconColor: Colors.teal,
+                  colors: colors,
+                ),
+                _buildStatCard(
+                  title: _tr('Last Attendance'),
+                  value: lastAttDate,
+                  icon: Icons.history,
+                  iconColor: Colors.indigo,
+                  colors: colors,
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -840,43 +864,21 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Attendance Dihadi Options
+                // Attendance Dihadi Options (0, 0.5, 1, 1.5, 2)
                 Text(
-                  _tr('Attendance Status:'),
+                  _tr('Attendance Dihadi (Select 0, 0.5, 1, 1.5, or 2):'),
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.textPrimary),
                 ),
-                const SizedBox(height: 8),
-                Row(
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Expanded(
-                      child: ChoiceChip(
-                        label: Center(child: Text('Present\n(1 Dihadi)', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _selectedDihadi == 1.0 ? Colors.white : colors.textPrimary))),
-                        selected: _selectedDihadi == 1.0,
-                        selectedColor: Colors.green.shade700,
-                        backgroundColor: colors.surfaceSubtle,
-                        onSelected: (val) { if (val) setState(() => _selectedDihadi = 1.0); },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ChoiceChip(
-                        label: Center(child: Text('Half Day\n(0.5 Dihadi)', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _selectedDihadi == 0.5 ? Colors.white : colors.textPrimary))),
-                        selected: _selectedDihadi == 0.5,
-                        selectedColor: Colors.orange.shade800,
-                        backgroundColor: colors.surfaceSubtle,
-                        onSelected: (val) { if (val) setState(() => _selectedDihadi = 0.5); },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ChoiceChip(
-                        label: Center(child: Text('Absent\n(0 Dihadi)', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _selectedDihadi == 0.0 ? Colors.white : colors.textPrimary))),
-                        selected: _selectedDihadi == 0.0,
-                        selectedColor: Colors.red.shade700,
-                        backgroundColor: colors.surfaceSubtle,
-                        onSelected: (val) { if (val) setState(() => _selectedDihadi = 0.0); },
-                      ),
-                    ),
+                    _buildDihadiChoice(0.0, '0 Dihadi\n(Absent)', Colors.red.shade700, colors),
+                    _buildDihadiChoice(0.5, '0.5 Dihadi\n(Half Day)', Colors.orange.shade800, colors),
+                    _buildDihadiChoice(1.0, '1 Dihadi\n(Full Day)', Colors.green.shade700, colors),
+                    _buildDihadiChoice(1.5, '1.5 Dihadi\n(Overtime)', Colors.blue.shade700, colors),
+                    _buildDihadiChoice(2.0, '2 Dihadi\n(Double)', Colors.purple.shade700, colors),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -948,158 +950,12 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
     );
   }
 
-  // ─── 3. ATTENDANCE REPORT TAB (SECTION 5) ──────────────────────────────────
-  Widget _buildReportsTab(AppSemanticColors colors) {
-    final totalDays = _reportSummary['totalWorkingDays'] ?? 0;
-    final totalD = (_reportSummary['totalDihadi'] ?? 0).toDouble();
-    final totalE = (_reportSummary['totalEarnings'] ?? 0).toDouble();
-    final totalP = (_reportSummary['totalPaid'] ?? 0).toDouble();
-    final remain = (_reportSummary['remainingPayment'] ?? 0).toDouble();
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Filter Bar
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(_tr('Report Filters'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.textPrimary)),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    // Month Dropdown
-                    Expanded(
-                      child: DropdownButtonFormField<int>(
-                        value: _reportMonth,
-                        decoration: InputDecoration(
-                          labelText: _tr('Month'),
-                          isDense: true,
-                          filled: true,
-                          fillColor: colors.surfaceSubtle,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        items: List.generate(12, (i) {
-                          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                          return DropdownMenuItem(value: i + 1, child: Text(monthNames[i]));
-                        }),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() => _reportMonth = val);
-                            _fetchAttendanceReport();
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // Status Filter
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _reportStatusFilter,
-                        decoration: InputDecoration(
-                          labelText: _tr('Status'),
-                          isDense: true,
-                          filled: true,
-                          fillColor: colors.surfaceSubtle,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        items: ['All', 'Present', 'Half Day', 'Absent'].map((s) {
-                          return DropdownMenuItem(value: s, child: Text(s));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() => _reportStatusFilter = val);
-                            _fetchAttendanceReport();
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Summary Metrics Banner (Section 5)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [colors.primary.withValues(alpha: 0.12), colors.surface],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colors.primary.withValues(alpha: 0.25)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Total Working Days: $totalDays', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: colors.textPrimary)),
-                    Text('Total Dihadi: $totalD', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: colors.primary)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                const Divider(),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Total Earned: ${_formatCurrency(totalE)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.green.shade700)),
-                    Text('Paid: ${_formatCurrency(totalP)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.teal)),
-                    Text('Balance: ${_formatCurrency(remain)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.redAccent)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Records List
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('${_tr("Attendance Records")} (${_reportRecords.length})', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: colors.textPrimary)),
-              IconButton(
-                icon: const Icon(Icons.share, size: 20),
-                tooltip: _tr('Export Report'),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(_tr('Export report generated: ${_reportRecords.length} records.'))),
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          if (_isLoadingReport)
-            Center(child: Padding(padding: const EdgeInsets.all(24), child: CircularProgressIndicator(color: colors.primary)))
-          else if (_reportRecords.isEmpty)
-            Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(_tr('No records found for the selected filter.'))))
-          else
-            ..._reportRecords.map((r) => _buildReportItem(r, colors)),
-        ],
-      ),
-    );
-  }
 
   // ─── 4. EARNINGS & PAYMENT HISTORY TAB (SECTION 6) ─────────────────────────
   Widget _buildEarningsTab(AppSemanticColors colors) {
     final totalE = (_earningsSummary['totalEarnings'] ?? 0).toDouble();
     final totalP = (_earningsSummary['totalPaid'] ?? 0).toDouble();
+    final totalAdv = (_earningsSummary['totalAdvance'] ?? _earningsSummary['totalAdvanced'] ?? 0).toDouble();
     final pending = (_earningsSummary['pendingPayment'] ?? 0).toDouble();
 
     return RefreshIndicator(
@@ -1145,6 +1001,14 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
                   child: _buildFinancialTile(title: _tr('Total Earned'), amount: totalE, color: Colors.green.shade700, colors: colors),
                 ),
                 const SizedBox(width: 10),
+                Expanded(
+                  child: _buildFinancialTile(title: _tr('Total Advanced'), amount: totalAdv, color: Colors.orange.shade800, colors: colors),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
                 Expanded(
                   child: _buildFinancialTile(title: _tr('Total Paid'), amount: totalP, color: Colors.teal, colors: colors),
                 ),
@@ -1504,6 +1368,35 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
     );
   }
 
+  Widget _buildDihadiChoice(double value, String label, Color color, AppSemanticColors colors) {
+    final isSelected = _selectedDihadi == value;
+    return InkWell(
+      onTap: () => setState(() => _selectedDihadi = value),
+      borderRadius: BorderRadius.circular(10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? color : colors.surfaceSubtle,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? color : colors.border,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : colors.textPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAttendanceItem(Map<String, dynamic> rec, AppSemanticColors colors) {
     final d = (rec['dihadi'] ?? 1.0).toDouble();
     final dateStr = rec['date']?.toString().split('T').first ?? '';
@@ -1513,8 +1406,19 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
 
     Color badgeColor = Colors.green;
     String badgeText = 'Present (1D)';
-    if (d == 0.5) { badgeColor = Colors.orange; badgeText = 'Half Day (0.5D)'; }
-    else if (d == 0) { badgeColor = Colors.red; badgeText = 'Absent (0D)'; }
+    if (d == 0.5) {
+      badgeColor = Colors.orange;
+      badgeText = 'Half Day (0.5D)';
+    } else if (d == 0) {
+      badgeColor = Colors.red;
+      badgeText = 'Absent (0D)';
+    } else if (d == 1.5) {
+      badgeColor = Colors.blue;
+      badgeText = '1.5 Dihadi';
+    } else if (d == 2.0) {
+      badgeColor = Colors.purple;
+      badgeText = '2.0 Dihadi';
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -1560,51 +1464,6 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
     );
   }
 
-  Widget _buildReportItem(Map<String, dynamic> r, AppSemanticColors colors) {
-    final d = (r['dihadi'] ?? 1.0).toDouble();
-    final dateStr = r['date']?.toString().split('T').first ?? '';
-    final rate = r['dihadiRate'] ?? 800;
-    final earned = (r['earnedAmount'] ?? (d * rate)).toDouble();
-    final status = r['status'] ?? (d >= 1 ? 'Present' : (d == 0.5 ? 'Half Day' : 'Absent'));
-    final approvalStatus = r['approvalStatus'] ?? 'Approved';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(dateStr, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: colors.textPrimary)),
-                Text('$status • $d Dihadi • Rate: ₹$rate', style: TextStyle(fontSize: 11, color: colors.textSecondary)),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(_formatCurrency(earned), style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.textPrimary)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: approvalStatus == 'Approved' ? Colors.green.withValues(alpha: 0.12) : Colors.orange.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(approvalStatus, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: approvalStatus == 'Approved' ? Colors.green : Colors.orange)),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPaymentItem(Map<String, dynamic> p, AppSemanticColors colors) {
     final amt = (p['amount'] ?? 0).toDouble();

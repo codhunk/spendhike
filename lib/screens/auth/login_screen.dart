@@ -34,6 +34,11 @@ class _LoginScreenState extends State<LoginScreen> {
   String _tr(String text) => AppSettings.instance.tr(text);
 
   Future<void> _handlePostLoginNavigation() async {
+    if (ApiService.currentUser?.role == 'Labour') {
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/labour-panel');
+      return;
+    }
     final isPasscodeConfigured = await PasscodeService.isPasscodeConfigured();
     if (!mounted) return;
     if (isPasscodeConfigured) {

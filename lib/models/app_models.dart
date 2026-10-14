@@ -13,6 +13,7 @@ class UserModel {
   final bool verified;
   final String currency;
   final String language;
+  final String role;
   final bool biometricEnabled;
   final bool pinEnabled;
   final bool passcodeConfigured;
@@ -32,6 +33,7 @@ class UserModel {
     required this.verified,
     required this.currency,
     required this.language,
+    this.role = 'User',
     required this.biometricEnabled,
     required this.pinEnabled,
     this.passcodeConfigured = false,
@@ -53,6 +55,7 @@ class UserModel {
       verified: json['verified'] ?? true,
       currency: json['currency'] ?? 'INR (₹)',
       language: json['language'] ?? 'English (IN)',
+      role: json['role'] ?? 'User',
       biometricEnabled: json['biometricEnabled'] ?? true,
       pinEnabled: json['pinEnabled'] ?? true,
       passcodeConfigured: json['passcodeConfigured'] ?? json['pinEnabled'] ?? false,
@@ -74,6 +77,7 @@ class UserModel {
     bool? verified,
     String? currency,
     String? language,
+    String? role,
     bool? biometricEnabled,
     bool? pinEnabled,
     bool? passcodeConfigured,
@@ -93,6 +97,7 @@ class UserModel {
       verified: verified ?? this.verified,
       currency: currency ?? this.currency,
       language: language ?? this.language,
+      role: role ?? this.role,
       biometricEnabled: biometricEnabled ?? this.biometricEnabled,
       pinEnabled: pinEnabled ?? this.pinEnabled,
       passcodeConfigured: passcodeConfigured ?? this.passcodeConfigured,
@@ -115,6 +120,7 @@ class UserModel {
         'verified': verified,
         'currency': currency,
         'language': language,
+        'role': role,
         'biometricEnabled': biometricEnabled,
         'pinEnabled': pinEnabled,
         'darkMode': darkMode,
@@ -340,7 +346,7 @@ class InvitationModel {
 }
 
 String formatCompactCurrency(dynamic amountVal, {String prefix = ''}) {
-  if (amountVal == null) return '${prefix}₹0.00K';
+  if (amountVal == null) return '$prefix₹0.00K';
 
   double valNum = 0.0;
   if (amountVal is double) {
@@ -349,7 +355,7 @@ String formatCompactCurrency(dynamic amountVal, {String prefix = ''}) {
     valNum = amountVal.toDouble();
   } else if (amountVal != null) {
     final str = amountVal.toString().trim();
-    if (str.isEmpty) return '${prefix}₹0.00K';
+    if (str.isEmpty) return '$prefix₹0.00K';
 
     // If the string is already formatted with a compact suffix (K, M, B, T), preserve it!
     if (RegExp(r'[KMBT]$').hasMatch(str)) {
