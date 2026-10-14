@@ -1510,4 +1510,431 @@ class ApiService {
     }
     return null;
   }
+
+  // ==========================================
+  // GROUP ADMIN: LABOUR REGISTRATION & MANAGEMENT
+  // ==========================================
+
+  static Future<Map<String, dynamic>> adminRegisterLabour(Map<String, dynamic> payload) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/admin/register');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(Uri.parse(endpoint), headers: _headers, body: jsonEncode(payload))
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Labour registered successfully',
+            'labour': data['labour'],
+            'user': data['user'],
+          };
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Failed to register labour member'};
+        }
+      } catch (e) {
+        debugPrint('API Error in adminRegisterLabour at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Network error while registering labour member'};
+  }
+
+  static Future<Map<String, dynamic>> adminUpdateLabour(String labourId, Map<String, dynamic> payload) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/admin/$labourId');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .put(Uri.parse(endpoint), headers: _headers, body: jsonEncode(payload))
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {'success': true, 'message': data['message'] ?? 'Labour updated', 'labour': data['labour']};
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Failed to update labour'};
+        }
+      } catch (e) {
+        debugPrint('API Error in adminUpdateLabour at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Failed to update labour member'};
+  }
+
+  static Future<Map<String, dynamic>> adminResetLabourPassword(
+      String labourId, String newPassword, String confirmPassword) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/admin/$labourId/reset-password');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(
+              Uri.parse(endpoint),
+              headers: _headers,
+              body: jsonEncode({'newPassword': newPassword, 'confirmPassword': confirmPassword}),
+            )
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          return {'success': true, 'message': data['message'] ?? 'Password reset successfully'};
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Failed to reset password'};
+        }
+      } catch (e) {
+        debugPrint('API Error in adminResetLabourPassword at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Failed to reset password'};
+  }
+
+  static Future<List<Map<String, dynamic>>> adminGetAttendanceCorrections({String? siteId}) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/admin/attendance-corrections');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final queryParams = <String, String>{};
+        if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+        final uri = Uri.parse(endpoint).replace(queryParameters: queryParams);
+        final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['corrections'] is List) {
+          return List<Map<String, dynamic>>.from(data['corrections']);
+        }
+      } catch (e) {
+        debugPrint('API Error in adminGetAttendanceCorrections at $endpoint: $e');
+      }
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> adminReviewAttendanceCorrection(
+    String attendanceId, {
+    required String decision,
+    double? newDihadi,
+    String? adminNotes,
+  }) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/admin/attendance-corrections/$attendanceId/review');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(
+              Uri.parse(endpoint),
+              headers: _headers,
+              body: jsonEncode({'decision': decision, 'newDihadi': newDihadi, 'adminNotes': adminNotes}),
+            )
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {'success': true, 'message': data['message'] ?? 'Reviewed successfully'};
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Failed to review correction'};
+        }
+      } catch (e) {
+        debugPrint('API Error in adminReviewAttendanceCorrection at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Failed to review correction'};
+  }
+
+  // ==========================================
+  // LABOUR AUTHENTICATION (EMAIL & OTP)
+  // ==========================================
+
+  static Future<Map<String, dynamic>> labourLoginWithEmail(String email, String password) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanPassword = password.trim();
+    final candidateEndpoints = _buildCandidateEndpoints('/auth/labour/login');
+
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(
+              Uri.parse(endpoint),
+              headers: _headers,
+              body: jsonEncode({'email': cleanEmail, 'password': cleanPassword}),
+            )
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          _authToken = data['token'];
+          if (data['user'] != null) {
+            _currentUser = UserModel.fromJson(data['user']);
+          }
+          await SessionManager.saveSession(_authToken!, data['user']);
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Labour login successful',
+            'token': data['token'],
+            'user': data['user'],
+            'labour': data['labour'],
+          };
+        } else {
+          return {
+            'success': false,
+            'message': data['message'] ?? 'Invalid credentials or inactive account',
+          };
+        }
+      } catch (e) {
+        debugPrint('API Error in labourLoginWithEmail at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Cannot connect to server. Please check your network connection.'};
+  }
+
+  static Future<Map<String, dynamic>> labourLoginWithOtp(String mobile, String otp) async {
+    final cleanMobile = mobile.trim();
+    final cleanOtp = otp.trim();
+    final candidateEndpoints = _buildCandidateEndpoints('/auth/labour/otp-login');
+
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(
+              Uri.parse(endpoint),
+              headers: _headers,
+              body: jsonEncode({'mobile': cleanMobile, 'otp': cleanOtp}),
+            )
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          _authToken = data['token'];
+          if (data['user'] != null) {
+            _currentUser = UserModel.fromJson(data['user']);
+          }
+          await SessionManager.saveSession(_authToken!, data['user']);
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Labour OTP login successful',
+            'token': data['token'],
+            'user': data['user'],
+            'labour': data['labour'],
+          };
+        } else {
+          return {
+            'success': false,
+            'message': data['message'] ?? 'Invalid or expired OTP',
+          };
+        }
+      } catch (e) {
+        debugPrint('API Error in labourLoginWithOtp at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Cannot connect to server. Please check your network connection.'};
+  }
+
+  // ==========================================
+  // LABOUR PANEL FEATURES (SECTIONS 3, 4, 5, 6, 7)
+  // ==========================================
+
+  static Future<Map<String, dynamic>?> getLabourDashboardData() async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/dashboard');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http.get(Uri.parse(endpoint), headers: _headers).timeout(_timeoutDuration);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          return Map<String, dynamic>.from(data);
+        }
+      } catch (e) {
+        debugPrint('API Error in getLabourDashboardData at $endpoint: $e');
+      }
+    }
+    return null;
+  }
+
+  static Future<Map<String, dynamic>> labourMarkAttendance({
+    required double dihadi,
+    String? date,
+    String? notes,
+  }) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/attendance');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(
+              Uri.parse(endpoint),
+              headers: _headers,
+              body: jsonEncode({'dihadi': dihadi, 'date': date, 'notes': notes}),
+            )
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Attendance marked',
+            'attendance': data['attendance'],
+          };
+        } else {
+          return {
+            'success': false,
+            'message': data['message'] ?? 'Failed to mark attendance',
+            'existingRecord': data['existingRecord'],
+          };
+        }
+      } catch (e) {
+        debugPrint('API Error in labourMarkAttendance at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Failed to mark attendance'};
+  }
+
+  static Future<Map<String, dynamic>> labourRequestAttendanceCorrection({
+    required String attendanceId,
+    required double requestedDihadi,
+    required String reason,
+  }) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/attendance/request-correction');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(
+              Uri.parse(endpoint),
+              headers: _headers,
+              body: jsonEncode({
+                'attendanceId': attendanceId,
+                'requestedDihadi': requestedDihadi,
+                'reason': reason,
+              }),
+            )
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {'success': true, 'message': data['message'] ?? 'Correction submitted'};
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Failed to submit correction'};
+        }
+      } catch (e) {
+        debugPrint('API Error in labourRequestAttendanceCorrection at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Failed to submit correction'};
+  }
+
+  static Future<Map<String, dynamic>> getLabourAttendanceReport({
+    int? month,
+    int? year,
+    String? startDate,
+    String? endDate,
+    String? status,
+  }) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/reports');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final queryParams = <String, String>{};
+        if (month != null) queryParams['month'] = month.toString();
+        if (year != null) queryParams['year'] = year.toString();
+        if (startDate != null && startDate.isNotEmpty) queryParams['startDate'] = startDate;
+        if (endDate != null && endDate.isNotEmpty) queryParams['endDate'] = endDate;
+        if (status != null && status.isNotEmpty) queryParams['status'] = status;
+
+        final uri = Uri.parse(endpoint).replace(queryParameters: queryParams);
+        final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          return {
+            'success': true,
+            'summary': data['summary'] != null ? Map<String, dynamic>.from(data['summary']) : {},
+            'records': data['records'] is List ? List<Map<String, dynamic>>.from(data['records']) : [],
+          };
+        }
+      } catch (e) {
+        debugPrint('API Error in getLabourAttendanceReport at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'summary': {}, 'records': []};
+  }
+
+  static Future<Map<String, dynamic>> getLabourEarningsAndPayments() async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/earnings');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http.get(Uri.parse(endpoint), headers: _headers).timeout(_timeoutDuration);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          return {
+            'success': true,
+            'summary': data['summary'] != null ? Map<String, dynamic>.from(data['summary']) : {},
+            'payments': data['payments'] is List ? List<Map<String, dynamic>>.from(data['payments']) : [],
+          };
+        }
+      } catch (e) {
+        debugPrint('API Error in getLabourEarningsAndPayments at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'summary': {}, 'payments': []};
+  }
+
+  static Future<Map<String, dynamic>> updateLabourProfile({
+    String? name,
+    String? address,
+    String? avatarUrl,
+  }) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/profile');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .put(
+              Uri.parse(endpoint),
+              headers: _headers,
+              body: jsonEncode({'name': name, 'address': address, 'avatarUrl': avatarUrl}),
+            )
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {'success': true, 'message': data['message'] ?? 'Profile updated', 'user': data['user']};
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Failed to update profile'};
+        }
+      } catch (e) {
+        debugPrint('API Error in updateLabourProfile at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Failed to update profile'};
+  }
+
+  static Future<Map<String, dynamic>> changeLabourPassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/change-password');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(
+              Uri.parse(endpoint),
+              headers: _headers,
+              body: jsonEncode({
+                'currentPassword': currentPassword,
+                'newPassword': newPassword,
+                'confirmPassword': confirmPassword,
+              }),
+            )
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          return {'success': true, 'message': data['message'] ?? 'Password changed successfully'};
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Failed to change password'};
+        }
+      } catch (e) {
+        debugPrint('API Error in changeLabourPassword at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Failed to change password'};
+  }
 }
+

@@ -10,6 +10,7 @@ import '../../widgets/language_switcher.dart';
 import '../../widgets/spend_hike_logo.dart';
 import '../../widgets/theme_switcher.dart';
 import 'create_passcode_screen.dart';
+import 'labour_login_screen.dart';
 
 class LoginScreen extends StatefulWidget {
 
@@ -558,7 +559,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF74777D).withOpacity(1),
+                      color: const Color(0xFF74777D).withValues(alpha: 1.0),
                       letterSpacing: 1.2,
                     ),
                   ),
@@ -585,6 +586,41 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 24),
+            const Divider(color: Color(0xFFC4C6CD)),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LabourLoginScreen()),
+                );
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0453CD).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFF0453CD).withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.engineering, size: 20, color: Color(0xFF0453CD)),
+                    const SizedBox(width: 8),
+                    Text(
+                      _tr('Labour / Worker Login Portal →'),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0453CD),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

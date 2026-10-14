@@ -103,10 +103,67 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
           appBar: AppBar(
             backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? colors.surface,
             title: Text(name, overflow: TextOverflow.ellipsis, style: TextStyle(color: colors.textPrimary)),
-            actions: const [
-              ThemeSwitcherButton(),
-              LanguageSwitcherButton(),
-              SizedBox(width: 8),
+            actions: [
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: colors.textPrimary),
+                tooltip: _tr('Admin Actions'),
+                onSelected: (val) {
+                  if (val == 'edit') {
+                    _showEditLabourModal();
+                  } else if (val == 'reset_password') {
+                    _showResetPasswordModal();
+                  } else if (val == 'toggle_status') {
+                    _toggleLabourStatus();
+                  }
+                },
+                itemBuilder: (ctx) => [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_outlined, size: 18, color: colors.primary),
+                        const SizedBox(width: 8),
+                        Text(_tr('Edit Details')),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'reset_password',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.lock_reset, size: 18, color: Colors.amber),
+                        const SizedBox(width: 8),
+                        Text(_tr('Reset Password')),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'toggle_status',
+                    child: Row(
+                      children: [
+                        Icon(
+                          (_labourData?['status'] ?? 'Active') == 'Active'
+                              ? Icons.block
+                              : Icons.check_circle_outline,
+                          size: 18,
+                          color: (_labourData?['status'] ?? 'Active') == 'Active'
+                              ? Colors.red
+                              : Colors.green,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          (_labourData?['status'] ?? 'Active') == 'Active'
+                              ? _tr('Deactivate Account')
+                              : _tr('Activate Account'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const ThemeSwitcherButton(),
+              const LanguageSwitcherButton(),
+              const SizedBox(width: 8),
             ],
             bottom: TabBar(
               controller: _tabController,
@@ -423,5 +480,225 @@ class _LabourDetailScreenState extends State<LabourDetailScreen> with SingleTick
         );
       },
     );
+  }
+
+  // ─── ADMIN EDIT & PASSWORD MODALS ──────────────────────────────────────────
+
+  void _showEditLabourModal() {
+    if (_labourData == null) return;
+    final nameCtrl = TextEditingController(text: _labourData!['name'] ?? '');
+    final mobileCtrl = TextEditingController(text: _labourData!['mobileNumber'] ?? '');
+    final emailCtrl = TextEditingController(text: _labourData!['email'] ?? '');
+    final rateCtrl = TextEditingController(text: (_labourData!['dihadiRate'] ?? 0).toString());
+    final addressCtrl = TextEditingController(text: _labourData!['address'] ?? '');
+    String type = _labourData!['labourType'] ?? 'Helper';
+    String status = _labourData!['status'] ?? 'Active';
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return AlertDialog(
+            title: Text(_tr('Edit Labour Details')),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(controller: nameCtrl, decoration: InputDecoration(labelText: _tr('Full Name *'))),
+                  const SizedBox(height: 12),
+                  TextField(controller: mobileCtrl, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: _tr('Mobile Number *'))),
+                  const SizedBox(height: 12),
+                  TextField(controller: emailCtrl, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: _tr('Email Address'))),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: type,
+                    decoration: InputDecoration(labelText: _tr('Labour Type *')),
+                    items: [
+                      DropdownMenuItem(value: 'Carigar', child: Text(_tr('Carigar'))),
+                      DropdownMenuItem(value: 'Helper', child: Text(_tr('Helper'))),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setModalState(() => type = val);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(controller: rateCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _tr('Dihadi Rate (₹) *'))),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: status,
+                    decoration: InputDecoration(labelText: _tr('Account Status *')),
+                    items: [
+                      DropdownMenuItem(value: 'Active', child: Text(_tr('Active'))),
+                      DropdownMenuItem(value: 'Inactive', child: Text(_tr('Inactive'))),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setModalState(() => status = val);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(controller: addressCtrl, decoration: InputDecoration(labelText: _tr('Address'))),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_tr('Cancel'))),
+              ElevatedButton(
+                onPressed: isSaving
+                    ? null
+                    : () async {
+                        if (nameCtrl.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(_tr('Please enter full name')), backgroundColor: Colors.red),
+                          );
+                          return;
+                        }
+
+                        setModalState(() => isSaving = true);
+                        final res = await ApiService.adminUpdateLabour(widget.labourId, {
+                          'name': nameCtrl.text.trim(),
+                          'mobileNumber': mobileCtrl.text.trim(),
+                          'email': emailCtrl.text.trim(),
+                          'labourType': type,
+                          'dihadiRate': double.tryParse(rateCtrl.text) ?? 800,
+                          'address': addressCtrl.text.trim(),
+                          'status': status,
+                        });
+
+                        if (!context.mounted) return;
+                        if (res['success'] == true) {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res['message'] ?? _tr('Updated successfully!')), backgroundColor: Colors.green),
+                          );
+                          _loadData();
+                        } else {
+                          setModalState(() => isSaving = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res['message'] ?? _tr('Failed to update')), backgroundColor: Colors.red),
+                          );
+                        }
+                      },
+                child: isSaving
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text(_tr('Save Changes')),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showResetPasswordModal() {
+    final newPassCtrl = TextEditingController();
+    final confirmPassCtrl = TextEditingController();
+    bool isSaving = false;
+    bool obscure = true;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return AlertDialog(
+            title: Text(_tr('Reset Labour Password')),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: newPassCtrl,
+                    obscureText: obscure,
+                    decoration: InputDecoration(
+                      labelText: _tr('New Password *'),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setModalState(() => obscure = !obscure),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: confirmPassCtrl,
+                    obscureText: obscure,
+                    decoration: InputDecoration(
+                      labelText: _tr('Confirm Password *'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_tr('Cancel'))),
+              ElevatedButton(
+                onPressed: isSaving
+                    ? null
+                    : () async {
+                        final newP = newPassCtrl.text.trim();
+                        final confP = confirmPassCtrl.text.trim();
+                        if (newP.isEmpty || newP.length < 6) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(_tr('Password must be at least 6 characters')), backgroundColor: Colors.red),
+                          );
+                          return;
+                        }
+                        if (newP != confP) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(_tr('Passwords do not match')), backgroundColor: Colors.red),
+                          );
+                          return;
+                        }
+
+                        setModalState(() => isSaving = true);
+                        final res = await ApiService.adminResetLabourPassword(widget.labourId, newP, confP);
+
+                        if (!context.mounted) return;
+                        if (res['success'] == true) {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res['message'] ?? _tr('Password reset successfully!')), backgroundColor: Colors.green),
+                          );
+                        } else {
+                          setModalState(() => isSaving = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res['message'] ?? _tr('Failed to reset password')), backgroundColor: Colors.red),
+                          );
+                        }
+                      },
+                child: isSaving
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text(_tr('Reset Password')),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _toggleLabourStatus() async {
+    final currentStatus = _labourData?['status'] ?? 'Active';
+    final targetStatus = currentStatus == 'Active' ? 'Inactive' : 'Active';
+
+    final res = await ApiService.adminUpdateLabour(widget.labourId, {'status': targetStatus});
+    if (!mounted) return;
+
+    if (res['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${_tr('Account status updated to')} ${_tr(targetStatus)}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _loadData();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(res['message'] ?? _tr('Failed to update status')), backgroundColor: Colors.red),
+      );
+    }
   }
 }

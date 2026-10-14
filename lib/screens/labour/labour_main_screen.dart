@@ -137,6 +137,11 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
             elevation: 1,
             actions: [
               IconButton(
+                icon: const Icon(Icons.fact_check_outlined),
+                tooltip: _tr('Attendance Corrections'),
+                onPressed: _showAttendanceCorrectionsModal,
+              ),
+              IconButton(
                 icon: const Icon(Icons.badge_outlined),
                 tooltip: _tr('Worker / Labour Self Panel'),
                 onPressed: () {
@@ -1284,27 +1289,35 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
   void _showAddLabourModal() {
     final nameCtrl = TextEditingController();
     final mobileCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+    final passCtrl = TextEditingController();
+    final confirmPassCtrl = TextEditingController();
     final rateCtrl = TextEditingController(text: '800');
+    final addressCtrl = TextEditingController();
     final contractorCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
     String type = 'Carigar';
     String? siteId = _selectedSiteId ?? (_sites.isNotEmpty ? _sites.first.id : null);
     bool isSaving = false;
+    bool obscure = true;
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
           return AlertDialog(
-            title: Text(_tr('Add New Labourer')),
+            title: Text(_tr('Register New Labour')),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(_tr('Basic Information'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+                  const SizedBox(height: 8),
                   TextField(controller: nameCtrl, decoration: InputDecoration(labelText: _tr('Full Name *'))),
-                  const SizedBox(height: 12),
-                  TextField(controller: mobileCtrl, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: _tr('Mobile Number'))),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
+                  TextField(controller: mobileCtrl, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: _tr('Mobile Number *'))),
+                  const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
                     value: type,
                     decoration: InputDecoration(labelText: _tr('Labour Type *')),
@@ -1321,19 +1334,45 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                       }
                     },
                   ),
-                  const SizedBox(height: 12),
-                  TextField(controller: rateCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _tr('Dihadi Rate (₹) *'))),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
+                  TextField(controller: rateCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _tr('Daily Wage / Dihadi Rate (₹) *'))),
+                  const SizedBox(height: 10),
                   if (_sites.isNotEmpty)
                     DropdownButtonFormField<String>(
                       value: siteId ?? _sites.first.id,
-                      decoration: InputDecoration(labelText: _tr('Site/Project')),
+                      decoration: InputDecoration(labelText: _tr('Assigned Group / Site *')),
                       items: _sites.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
                       onChanged: (val) => setModalState(() => siteId = val),
                     ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
+                  Text(_tr('Login Credentials (Optional)'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+                  const SizedBox(height: 8),
+                  TextField(controller: emailCtrl, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: _tr('Email Address'))),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: passCtrl,
+                    obscureText: obscure,
+                    decoration: InputDecoration(
+                      labelText: _tr('Password'),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setModalState(() => obscure = !obscure),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: confirmPassCtrl,
+                    obscureText: obscure,
+                    decoration: InputDecoration(labelText: _tr('Confirm Password')),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(_tr('Additional Details'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+                  const SizedBox(height: 8),
+                  TextField(controller: addressCtrl, decoration: InputDecoration(labelText: _tr('Address'))),
+                  const SizedBox(height: 10),
                   TextField(controller: contractorCtrl, decoration: InputDecoration(labelText: _tr('Contractor/Supervisor'))),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   TextField(controller: notesCtrl, decoration: InputDecoration(labelText: _tr('Notes'))),
                 ],
               ),
@@ -1344,24 +1383,57 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                 onPressed: isSaving
                     ? null
                     : () async {
-                        if (nameCtrl.text.trim().isEmpty) {
+                        final name = nameCtrl.text.trim();
+                        final mobile = mobileCtrl.text.trim();
+                        final email = emailCtrl.text.trim();
+                        final pass = passCtrl.text.trim();
+                        final confirmPass = confirmPassCtrl.text.trim();
+
+                        if (name.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(_tr('Please enter labour full name')), backgroundColor: Colors.red),
                           );
                           return;
                         }
+                        if (mobile.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(_tr('Please enter mobile number')), backgroundColor: Colors.red),
+                          );
+                          return;
+                        }
+                        if (pass.isNotEmpty) {
+                          if (pass.length < 6) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(_tr('Password must be at least 6 characters')), backgroundColor: Colors.red),
+                            );
+                            return;
+                          }
+                          if (pass != confirmPass) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(_tr('Passwords do not match')), backgroundColor: Colors.red),
+                            );
+                            return;
+                          }
+                        }
 
                         setModalState(() => isSaving = true);
 
-                        final res = await ApiService.createLabour({
-                          'name': nameCtrl.text.trim(),
-                          'mobileNumber': mobileCtrl.text.trim(),
+                        final payload = {
+                          'name': name,
+                          'mobileNumber': mobile,
+                          'email': email.isNotEmpty ? email : null,
+                          'password': pass.isNotEmpty ? pass : null,
                           'labourType': type,
                           'dihadiRate': double.tryParse(rateCtrl.text) ?? (type == 'Helper' ? 600 : 800),
                           'siteId': siteId ?? (_sites.isNotEmpty ? _sites.first.id : null),
+                          'address': addressCtrl.text.trim(),
                           'contractor': contractorCtrl.text.trim(),
                           'notes': notesCtrl.text.trim(),
-                        });
+                        };
+
+                        final res = pass.isNotEmpty
+                            ? await ApiService.adminRegisterLabour(payload)
+                            : await ApiService.createLabour(payload);
 
                         if (!context.mounted) return;
 
@@ -1369,7 +1441,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(res['message'] ?? _tr('Labour added successfully!')),
+                              content: Text(res['message'] ?? _tr('Labour registered successfully!')),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -1386,9 +1458,146 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                       },
                 child: isSaving
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : Text(_tr('Save Labour')),
+                    : Text(_tr('Register Labour')),
               ),
             ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showAttendanceCorrectionsModal() async {
+    final colors = AppTheme.of(context);
+    List<Map<String, dynamic>> corrections = await ApiService.adminGetAttendanceCorrections(siteId: _selectedSiteId);
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: colors.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _tr('Attendance Corrections'),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colors.textPrimary),
+                    ),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                  ],
+                ),
+                Text(
+                  _tr('Pending approval requests submitted by labour'),
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: corrections.isEmpty
+                      ? Center(
+                          child: Text(
+                            _tr('No pending corrections.'),
+                            style: TextStyle(color: colors.textSecondary),
+                          ),
+                        )
+                      : ListView.separated(
+                          itemCount: corrections.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final c = corrections[index];
+                            final id = c['_id'].toString();
+                            final labour = c['labourId'] is Map ? c['labourId'] : {};
+                            final labourName = labour['name'] ?? 'Worker';
+                            final labourCode = labour['labourId'] ?? '';
+                            final dateStr = (c['date'] ?? '').toString().split('T').first;
+                            final currentStatus = c['status'] ?? 'Absent';
+                            final requestedStatus = c['correctionRequested'] ?? 'Present';
+                            final reason = c['correctionReason'] ?? 'Correction requested';
+
+                            return Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: colors.surfaceSubtle,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: colors.border),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '$labourName ($labourCode)',
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: colors.textPrimary),
+                                      ),
+                                      Text(dateStr, style: TextStyle(fontSize: 12, color: colors.textMuted)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    '${_tr('Current')}: $currentStatus → ${_tr('Requested')}: $requestedStatus',
+                                    style: TextStyle(fontWeight: FontWeight.w600, color: colors.primary, fontSize: 13),
+                                  ),
+                                  if (reason.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Text('${_tr('Reason')}: $reason', style: TextStyle(fontSize: 12, color: colors.textSecondary)),
+                                  ],
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      OutlinedButton(
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: Colors.red,
+                                          side: const BorderSide(color: Colors.red),
+                                        ),
+                                        onPressed: () async {
+                                          final res = await ApiService.adminReviewAttendanceCorrection(id, decision: 'Reject');
+                                          if (res['success'] == true) {
+                                            final updated = await ApiService.adminGetAttendanceCorrections(siteId: _selectedSiteId);
+                                            setSheetState(() => corrections = updated);
+                                            _refreshAllTabs();
+                                          }
+                                        },
+                                        child: Text(_tr('Reject')),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        onPressed: () async {
+                                          final res = await ApiService.adminReviewAttendanceCorrection(id, decision: 'Approve');
+                                          if (res['success'] == true) {
+                                            final updated = await ApiService.adminGetAttendanceCorrections(siteId: _selectedSiteId);
+                                            setSheetState(() => corrections = updated);
+                                            _refreshAllTabs();
+                                          }
+                                        },
+                                        child: Text(_tr('Approve')),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
           );
         },
       ),
