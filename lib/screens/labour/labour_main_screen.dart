@@ -1345,9 +1345,17 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
                       onChanged: (val) => setModalState(() => siteId = val),
                     ),
                   const SizedBox(height: 14),
-                  Text(_tr('Login Credentials (Optional)'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+                  Text(_tr('Login & Notification (Optional)'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
                   const SizedBox(height: 8),
-                  TextField(controller: emailCtrl, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: _tr('Email Address'))),
+                  TextField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: _tr('Email Address (for Mail Notification)'),
+                      hintText: 'worker@example.com',
+                      prefixIcon: const Icon(Icons.mail_outline),
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: passCtrl,

@@ -92,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               _buildHeader(),
                               const SizedBox(height: 16),
                               _buildLoginForm(),
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 20),
                               _buildFooter(),
                             ],
                           ),
@@ -640,9 +640,9 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Padding(
-          padding: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: 5),
           child: Wrap(
             alignment: WrapAlignment.center,
             spacing: 20,
