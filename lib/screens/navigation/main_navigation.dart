@@ -30,6 +30,11 @@ class _MainNavigationState extends State<MainNavigation> {
   void initState() {
     super.initState();
     DataSyncNotifier.instance.addListener(_onDataSyncChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ApiService.currentUser?.role == 'Labour') {
+        Navigator.pushNamedAndRemoveUntil(context, '/labour-panel', (route) => false);
+      }
+    });
   }
 
   void _onDataSyncChanged() {

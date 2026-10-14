@@ -33,12 +33,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String _tr(String text) => AppSettings.instance.tr(text);
 
-  Future<void> _handlePostLoginNavigation() async {
-    if (ApiService.currentUser?.role == 'Labour') {
+  Future<void> _handlePostLoginNavigation([Map<String, dynamic>? userData]) async {
+    final role = userData?['role']?.toString() ?? ApiService.currentUser?.role;
+    if (role == 'Labour') {
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/labour-panel');
+      Navigator.pushNamedAndRemoveUntil(context, '/labour-panel', (route) => false);
       return;
     }
+
+    // Direct check if this account has an active Labour profile
+    try {
+      final labourCheck = await ApiService.getMyLabourProfile();
+      if (labourCheck != null && labourCheck['isRegistered'] == true) {
+        if (!mounted) return;
+        Navigator.pushNamedAndRemoveUntil(context, '/labour-panel', (route) => false);
+        return;
+      }
+    } catch (_) {}
+
     final isPasscodeConfigured = await PasscodeService.isPasscodeConfigured();
     if (!mounted) return;
     if (isPasscodeConfigured) {
@@ -385,7 +397,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                         if (mounted) setState(() => _isLoading = false);
                         if (res['success'] == true && mounted) {
-                          await _handlePostLoginNavigation();
+                          await _handlePostLoginNavigation(res['user']);
                         } else if (mounted) {
 
                           setState(() {
@@ -513,7 +525,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
                           if (mounted) setState(() => _isLoading = false);
                           if (res['success'] == true && mounted) {
-                            await _handlePostLoginNavigation();
+                            await _handlePostLoginNavigation(res['user']);
                           } else if (mounted) {
 
                             setState(() {

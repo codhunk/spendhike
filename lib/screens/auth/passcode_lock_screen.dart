@@ -118,10 +118,14 @@ class _PasscodeLockScreenState extends State<PasscodeLockScreen> {
     if (!mounted) return;
 
     if (isValid) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainNavigation()),
-      );
+      if (ApiService.currentUser?.role == 'Labour') {
+        Navigator.pushNamedAndRemoveUntil(context, '/labour-panel', (route) => false);
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainNavigation()),
+        );
+      }
     } else {
       setState(() {
         _isLoading = false;

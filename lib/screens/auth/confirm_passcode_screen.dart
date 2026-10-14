@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
+import '../../services/api_service.dart';
 import '../../services/app_settings.dart';
 import '../../services/passcode_service.dart';
 import '../../services/biometric_service.dart';
@@ -195,6 +196,15 @@ class _ConfirmPasscodeScreenState extends State<ConfirmPasscodeScreen> {
   }
 
   void _navigateToMain() {
+    if (ApiService.currentUser?.role == 'Labour') {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/labour-panel',
+        (route) => false,
+      );
+      return;
+    }
+
     if (widget.isResetFlow) {
       Navigator.of(context).popUntil((route) => route.isFirst);
       Navigator.pushReplacement(

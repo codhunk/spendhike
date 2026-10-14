@@ -3,8 +3,7 @@ import '../../services/api_service.dart';
 import '../../services/app_settings.dart';
 import '../../widgets/spend_hike_logo.dart';
 import '../auth/login_screen.dart';
-
-
+import '../labour/labour_panel_screen.dart';
 import '../../services/passcode_service.dart';
 import '../auth/create_passcode_screen.dart';
 import '../auth/passcode_lock_screen.dart';
@@ -54,16 +53,31 @@ class _SplashScreenState extends State<SplashScreen>
 
         Widget targetPage;
         if (isLoggedIn) {
-          final isPasscodeSet = await PasscodeService.isPasscodeConfigured();
-          if (isPasscodeSet) {
-            targetPage = const PasscodeLockScreen();
+          bool isLabour = ApiService.currentUser?.role == 'Labour';
+          if (!isLabour) {
+            try {
+              final lProfile = await ApiService.getMyLabourProfile();
+              if (lProfile != null && lProfile['isRegistered'] == true) {
+                isLabour = true;
+              }
+            } catch (_) {}
+          }
+
+          if (isLabour) {
+            targetPage = const LabourPanelScreen();
           } else {
-            targetPage = const CreatePasscodeScreen();
+            final isPasscodeSet = await PasscodeService.isPasscodeConfigured();
+            if (isPasscodeSet) {
+              targetPage = const PasscodeLockScreen();
+            } else {
+              targetPage = const CreatePasscodeScreen();
+            }
           }
         } else {
           targetPage = const LoginScreen();
         }
 
+        if (!mounted) return;
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (_, __, ___) => targetPage,
