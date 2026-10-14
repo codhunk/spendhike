@@ -599,19 +599,23 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
                   const SizedBox(height: 14),
                   const Divider(color: Colors.white24, height: 1),
                   const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 6,
                     children: [
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.schedule, size: 16, color: Colors.white70),
-                          const SizedBox(width: 6),
+                          const Icon(Icons.schedule, size: 15, color: Colors.white70),
+                          const SizedBox(width: 5),
                           Text(
                             '${_tr("Today's Status")}: ',
-                            style: const TextStyle(fontSize: 12, color: Colors.white70),
+                            style: const TextStyle(fontSize: 11, color: Colors.white70),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(color: todayColor, borderRadius: BorderRadius.circular(6)),
                             child: Text(
                               todayBadgeText,
@@ -622,7 +626,7 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
                       ),
                       Text(
                         'Wage: ₹${labour["dihadiRate"] ?? 800} / day',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ],
                   ),
@@ -705,10 +709,14 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        _tr('Monthly Earnings & Dihadi'),
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.textPrimary),
+                      Flexible(
+                        child: Text(
+                          _tr('Monthly Earnings & Dihadi'),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.textPrimary),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         _tr('Past 6 Months'),
                         style: TextStyle(fontSize: 11, color: colors.textSecondary),
@@ -850,13 +858,22 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_today, size: 18, color: colors.primary),
-                            const SizedBox(width: 10),
-                            Text(_formatDate(_selectedAttendanceDate), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary)),
-                          ],
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today, size: 18, color: colors.primary),
+                              const SizedBox(width: 10),
+                              Flexible(
+                                child: Text(
+                                  _formatDate(_selectedAttendanceDate),
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Text(_tr('Change Date'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.primary)),
                       ],
                     ),
@@ -891,8 +908,11 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: colors.primary.withValues(alpha: 0.2)),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
                     children: [
                       Text(_tr('Server Wage Rate:'), style: TextStyle(fontSize: 12, color: colors.textSecondary)),
                       Text(
@@ -1324,7 +1344,15 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: TextStyle(fontSize: 11, color: colors.textSecondary)),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
               Icon(icon, size: 16, color: iconColor),
             ],
           ),
@@ -1510,7 +1538,14 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
           Icon(icon, size: 16, color: colors.primary),
           const SizedBox(width: 10),
           Expanded(child: Text(label, style: TextStyle(fontSize: 12, color: colors.textSecondary))),
-          Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.textPrimary)),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.textPrimary),
+            ),
+          ),
         ],
       ),
     );

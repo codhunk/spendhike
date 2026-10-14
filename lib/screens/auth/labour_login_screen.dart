@@ -400,8 +400,11 @@ class _LabourLoginScreenState extends State<LabourLoginScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         TextButton(
                           onPressed: () => setState(() {
@@ -409,13 +412,13 @@ class _LabourLoginScreenState extends State<LabourLoginScreen> {
                             _otpController.clear();
                             _errorMessage = null;
                           }),
-                          child: Text(_tr('Change Mobile Number'), style: TextStyle(color: colors.primary)),
+                          child: Text(_tr('Change Mobile Number'), style: TextStyle(color: colors.primary, fontSize: 13)),
                         ),
                         TextButton(
                           onPressed: _resendCooldown > 0 ? null : _sendOtp,
                           child: Text(
                             _resendCooldown > 0 ? '${_tr("Resend in")} ${_resendCooldown}s' : _tr('Resend OTP'),
-                            style: TextStyle(color: _resendCooldown > 0 ? colors.textMuted : colors.primary),
+                            style: TextStyle(color: _resendCooldown > 0 ? colors.textMuted : colors.primary, fontSize: 13),
                           ),
                         ),
                       ],
