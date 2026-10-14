@@ -5,6 +5,7 @@ import '../../services/data_sync_notifier.dart';
 import '../../models/app_models.dart';
 import '../../services/app_settings.dart';
 import 'labour_detail_screen.dart';
+import 'labour_panel_screen.dart';
 
 class LabourMainScreen extends StatefulWidget {
   const LabourMainScreen({super.key});
@@ -134,6 +135,20 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
             ),
             backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? colors.surface,
             elevation: 1,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.badge_outlined),
+                tooltip: _tr('Worker / Labour Self Panel'),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => LabourPanelScreen(initialSiteId: _selectedSiteId),
+                    ),
+                  );
+                },
+              ),
+            ],
             bottom: TabBar(
               controller: _tabController,
               isScrollable: true,
@@ -170,6 +185,7 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
 
   // ─── 1. DASHBOARD TAB ────────────────────────────────────────────────────────
   Widget _buildDashboardTab() {
+    final colors = AppTheme.of(context);
     final d = _dashboardData ?? {};
     final totalLabour = d['totalLabour'] ?? 0;
     final carigar = d['totalCarigar'] ?? 0;
@@ -190,6 +206,66 @@ class _LabourMainScreenState extends State<LabourMainScreen> with SingleTickerPr
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Worker Self-Service Portal Quick Access Card
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [colors.primary.withValues(alpha: 0.12), colors.surface],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colors.primary.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: colors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.badge_outlined, color: colors.primary, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _tr('Labour Self Panel (Worker View)'),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.textPrimary),
+                        ),
+                        Text(
+                          _tr('Self-mark daily dihadi attendance & submit site kharcha'),
+                          style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => LabourPanelScreen(initialSiteId: _selectedSiteId),
+                        ),
+                      );
+                    },
+                    child: Text(_tr('Open Panel'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+
             // Quick Header Banner - Responsive Layout
             LayoutBuilder(
               builder: (context, constraints) {

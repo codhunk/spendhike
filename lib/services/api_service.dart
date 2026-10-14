@@ -1359,4 +1359,155 @@ class ApiService {
     }
     return [];
   }
+
+  // ==========================================
+  // LABOUR PANEL APIS (Group-wise)
+  // ==========================================
+
+  static Future<Map<String, dynamic>?> getMyLabourProfile({String? siteId}) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/me');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final queryParams = <String, String>{};
+        if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+        final uri = Uri.parse(endpoint).replace(queryParameters: queryParams);
+        final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          return Map<String, dynamic>.from(data);
+        }
+      } catch (e) {
+        debugPrint('API Error in getMyLabourProfile at $endpoint: $e');
+      }
+    }
+    return null;
+  }
+
+  static Future<Map<String, dynamic>> registerSelfAsLabour(Map<String, dynamic> payload) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/register');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(Uri.parse(endpoint), headers: _headers, body: jsonEncode(payload))
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {'success': true, 'message': data['message'] ?? 'Registered successfully', 'labour': data['labour']};
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Registration failed'};
+        }
+      } catch (e) {
+        debugPrint('API Error in registerSelfAsLabour at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Failed to register labour'};
+  }
+
+  static Future<Map<String, dynamic>> markMyAttendance(Map<String, dynamic> payload) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/attendance');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(Uri.parse(endpoint), headers: _headers, body: jsonEncode(payload))
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Attendance marked',
+            'attendance': data['attendance'],
+            'summary': data['summary'],
+          };
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Failed to mark attendance'};
+        }
+      } catch (e) {
+        debugPrint('API Error in markMyAttendance at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Failed to mark attendance'};
+  }
+
+  static Future<List<Map<String, dynamic>>> getMyAttendance({String? siteId, int? month, int? year}) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/attendance');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final queryParams = <String, String>{};
+        if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+        if (month != null) queryParams['month'] = month.toString();
+        if (year != null) queryParams['year'] = year.toString();
+
+        final uri = Uri.parse(endpoint).replace(queryParameters: queryParams);
+        final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['records'] is List) {
+          return List<Map<String, dynamic>>.from(data['records']);
+        }
+      } catch (e) {
+        debugPrint('API Error in getMyAttendance at $endpoint: $e');
+      }
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> recordMyExpense(Map<String, dynamic> payload) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/expenses');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http
+            .post(Uri.parse(endpoint), headers: _headers, body: jsonEncode(payload))
+            .timeout(_timeoutDuration);
+
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 201 || (response.statusCode == 200 && data['success'] == true)) {
+          DataSyncNotifier.instance.notifyDataChanged();
+          return {'success': true, 'message': data['message'] ?? 'Expense recorded', 'expense': data['expense']};
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Failed to record expense'};
+        }
+      } catch (e) {
+        debugPrint('API Error in recordMyExpense at $endpoint: $e');
+      }
+    }
+    return {'success': false, 'message': 'Failed to record expense'};
+  }
+
+  static Future<List<Map<String, dynamic>>> getMyExpenses({String? siteId}) async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/expenses');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final queryParams = <String, String>{};
+        if (siteId != null && siteId.isNotEmpty) queryParams['siteId'] = siteId;
+        final uri = Uri.parse(endpoint).replace(queryParameters: queryParams);
+        final response = await http.get(uri, headers: _headers).timeout(_timeoutDuration);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['expenses'] is List) {
+          return List<Map<String, dynamic>>.from(data['expenses']);
+        }
+      } catch (e) {
+        debugPrint('API Error in getMyExpenses at $endpoint: $e');
+      }
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>?> getMyLabourDashboard() async {
+    final candidateEndpoints = _buildCandidateEndpoints('/labours/panel/dashboard');
+    for (final endpoint in candidateEndpoints) {
+      try {
+        final response = await http.get(Uri.parse(endpoint), headers: _headers).timeout(_timeoutDuration);
+        final data = _parseJsonResponse(response);
+        if (response.statusCode == 200 && data['success'] == true) {
+          return Map<String, dynamic>.from(data);
+        }
+      } catch (e) {
+        debugPrint('API Error in getMyLabourDashboard at $endpoint: $e');
+      }
+    }
+    return null;
+  }
 }
