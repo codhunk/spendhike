@@ -53,15 +53,7 @@ class _SplashScreenState extends State<SplashScreen>
 
         Widget targetPage;
         if (isLoggedIn) {
-          bool isLabour = ApiService.currentUser?.role == 'Labour';
-          if (!isLabour) {
-            try {
-              final lProfile = await ApiService.getMyLabourProfile();
-              if (lProfile != null && lProfile['isRegistered'] == true) {
-                isLabour = true;
-              }
-            } catch (_) {}
-          }
+          final isLabour = ApiService.currentUser?.role == 'Labour';
 
           if (isLabour) {
             targetPage = const LabourPanelScreen();

@@ -41,16 +41,6 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Direct check if this account has an active Labour profile
-    try {
-      final labourCheck = await ApiService.getMyLabourProfile();
-      if (labourCheck != null && labourCheck['isRegistered'] == true) {
-        if (!mounted) return;
-        Navigator.pushNamedAndRemoveUntil(context, '/labour-panel', (route) => false);
-        return;
-      }
-    } catch (_) {}
-
     final isPasscodeConfigured = await PasscodeService.isPasscodeConfigured();
     if (!mounted) return;
     if (isPasscodeConfigured) {
