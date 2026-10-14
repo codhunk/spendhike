@@ -80,18 +80,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final user = await ApiService.getProfile();
       if (mounted) {
         setState(() {
-          _user = user;
+          _user = user.copyWith(
+            darkMode: AppSettings.instance.isDarkMode,
+          );
         });
-
-        // Sync local AppSettings
-        if (user.darkMode != AppSettings.instance.isDarkMode) {
-          AppSettings.instance.setTheme(user.darkMode);
-        }
-        if (user.language.toLowerCase().contains('hindi') && !AppSettings.instance.isHindi) {
-          AppSettings.instance.setLanguage(AppLanguage.hindi);
-        } else if (!user.language.toLowerCase().contains('hindi') && AppSettings.instance.isHindi) {
-          AppSettings.instance.setLanguage(AppLanguage.english);
-        }
       }
     } catch (e) {
       // Ignore API load error, keep local user
