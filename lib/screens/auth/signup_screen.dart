@@ -101,19 +101,23 @@ class _SignupScreenState extends State<SignupScreen> {
             ],
             
             Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 512),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildHeader(),
-                      const SizedBox(height: 32),
-                      _buildSignupForm(),
-                      const SizedBox(height: 32),
-                      _buildFooter(),
-                    ],
+              child: ScrollConfiguration(
+                behavior: const ScrollBehavior().copyWith(scrollbars: false),
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildHeader(),
+                        const SizedBox(height: 14),
+                        _buildSignupForm(),
+                        const SizedBox(height: 14),
+                        _buildFooter(),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -129,27 +133,20 @@ class _SignupScreenState extends State<SignupScreen> {
     final colors = AppTheme.of(context);
     return Column(
       children: [
-        SpendHikeIcon(
-          size: 64,
+        SpendHikeLogo(
+          isVertical: false,
+          iconSize: 36,
+          fontSize: 26,
           walletColor: colors.textPrimary,
           arrowColor: colors.primary,
+          textColor: colors.textPrimary,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 6),
         Text(
           _tr('Create your account'),
           style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: colors.textPrimary,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          _tr('Join SpendHike to start managing your complex financial data with precision.'),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 16,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
             color: colors.textSecondary,
           ),
         ),
@@ -164,7 +161,7 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget _buildSignupForm() {
     final colors = AppTheme.of(context);
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(12),
@@ -203,7 +200,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
             ],
             _buildTextField(
               label: _tr('FULL NAME'),
@@ -217,7 +214,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
             _buildTextField(
               label: _tr('MOBILE NUMBER'),
               hint: _tr('10-digit mobile number'),
@@ -230,7 +227,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
             _buildTextField(
               label: _tr('EMAIL ADDRESS'),
               hint: 'name@company.com',
@@ -244,7 +241,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
             _buildTextField(
               label: _tr('PASSWORD'),
               hint: _tr('Create a strong password'),
@@ -258,7 +255,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -274,31 +271,31 @@ class _SignupScreenState extends State<SignupScreen> {
                 Expanded(
                   child: Wrap(
                     children: [
-                      Text(_tr('I agree to the '), style: TextStyle(color: colors.textSecondary, fontSize: 14)),
+                      Text(_tr('I agree to the '), style: TextStyle(color: colors.textSecondary, fontSize: 13)),
                       GestureDetector(
                         onTap: () => _showPolicyDialog(
                           title: 'Terms & Conditions',
                           icon: Icons.gavel_outlined,
                           content: 'By using SpendHike, you agree to our terms of service. SpendHike provides financial tracking tools and is not a licensed financial advisor. You are responsible for maintaining the confidentiality of your account credentials. These terms are governed by the laws of India.\n\nContact: legal@spendhike.com',
                         ),
-                        child: Text(_tr('Terms & Conditions'), style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
+                        child: Text(_tr('Terms & Conditions'), style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
                       ),
-                      Text(_tr(' and '), style: TextStyle(color: colors.textSecondary, fontSize: 14)),
+                      Text(_tr(' and '), style: TextStyle(color: colors.textSecondary, fontSize: 13)),
                       GestureDetector(
                         onTap: () => _showPolicyDialog(
                           title: 'Privacy Policy',
                           icon: Icons.privacy_tip_outlined,
                           content: 'SpendHike is committed to protecting your privacy. We collect personal information such as name, email, mobile number, and financial transaction data. All data is encrypted using AES-256. We never sell your personal data to third parties.\n\nContact: privacy@spendhike.com',
                         ),
-                        child: Text(_tr('Privacy Policy'), style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
+                        child: Text(_tr('Privacy Policy'), style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
                       ),
-                      Text('.', style: TextStyle(color: colors.textSecondary, fontSize: 14)),
+                      Text('.', style: TextStyle(color: colors.textSecondary, fontSize: 13)),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 14),
             ElevatedButton(
               onPressed: _isLoading
                   ? null
@@ -343,7 +340,7 @@ class _SignupScreenState extends State<SignupScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 13),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 elevation: 2,
               ),
@@ -362,47 +359,11 @@ class _SignupScreenState extends State<SignupScreen> {
                       ],
                     ),
             ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              Expanded(child: Divider(color: colors.border)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  _tr('OR CONTINUE WITH'),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textSecondary,
-                  ),
-                ),
-              ),
-              Expanded(child: Divider(color: colors.border)),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSocialButton(
-                  imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDKA_Tq6Q7vEY1n-8LQXlr3tZhqfvEgFU-_xYGhsUMIeX7rGlf8Xq19JHhYRY4CJukM6PcmKtTWarvJ7A2n1FQnZgeI5xzKbtaTta_rl3OYRUWNkN8lXqfnpepIOZs0_8pTVAs7wRx0PjI-SlMh8nnMQMTVtTRxt-q3rJ7NFwILHoO55zDvcwrUX9fN_wT49ToCNILkD_hfpmrAxSCGA_A9rcCIs2mSFx5ZjEZYXlACgyjThN17LaBi',
-                  label: 'Google',
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildSocialButton(
-                  imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCLzSiEohfRE87Q1lWN_rDCOPYRWuyCPSeXhewa9K2Gwyj52jZUUd8bhcE6oWaNv4E-OCj-zvZuJI0sR_5IV8IToRoPGtmAmllWjqBcrkSWpKvTIz2jd_TPq1l2YWvKIkkJTgu-TCvyIw4jZiCpE7kW2lMSuvV5W2hgnKKxV9ah0AJg2L0hZZCYXFRDWQ7IcWz6VoqcAUyGbdkbG-IMoofStatjSw50DE4MVWE-HD3n9iERon3TaJTq',
-                  label: 'Apple',
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildTextField({
     required String label,
@@ -458,37 +419,10 @@ class _SignupScreenState extends State<SignupScreen> {
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: colors.primary, width: 2),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSocialButton({required String imageUrl, required String label}) {
-    final colors = AppTheme.of(context);
-    return OutlinedButton(
-      onPressed: () {},
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        backgroundColor: colors.surfaceSubtle,
-        side: BorderSide(color: colors.border),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        foregroundColor: colors.textPrimary,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.network(imageUrl, width: 20, height: 20),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
-          ),
-        ],
-      ),
     );
   }
 

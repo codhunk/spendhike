@@ -3,9 +3,6 @@ import '../../config/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/app_settings.dart';
 import '../../services/passcode_service.dart';
-import '../../services/biometric_service.dart';
-import '../../services/session_manager.dart';
-import '../navigation/main_navigation.dart';
 import '../../widgets/language_switcher.dart';
 import '../../widgets/spend_hike_logo.dart';
 import '../../widgets/theme_switcher.dart';
@@ -120,19 +117,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 420),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _buildHeader(),
-                            const SizedBox(height: 32),
-                            _buildLoginForm(),
-                            const SizedBox(height: 32),
-                            _buildFooter(),
-                          ],
+                    child: ScrollConfiguration(
+                      behavior: const ScrollBehavior().copyWith(scrollbars: false),
+                      child: SingleChildScrollView(
+                        physics: const ClampingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 420),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildHeader(),
+                              const SizedBox(height: 16),
+                              _buildLoginForm(),
+                              const SizedBox(height: 14),
+                              _buildFooter(),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -215,17 +216,17 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       children: [
         SpendHikeLogo(
-          isVertical: true,
-          iconSize: 64,
-          fontSize: 32,
+          isVertical: false,
+          iconSize: 36,
+          fontSize: 26,
           walletColor: colors.textPrimary,
           arrowColor: colors.primary,
           textColor: colors.textPrimary,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
         Text(
           _tr('Smart Finance Intelligence'),
-          style: TextStyle(fontSize: 16, color: colors.textSecondary),
+          style: TextStyle(fontSize: 13, color: colors.textSecondary),
         ),
       ],
     );
@@ -238,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLoginForm() {
     final colors = AppTheme.of(context);
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -315,7 +316,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
             if (_errorMessage != null) ...[
               Container(
                 padding: const EdgeInsets.all(12),
@@ -353,7 +354,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
               _buildTextField(
                 label: _tr('PASSWORD'),
                 hint: '••••••••',
@@ -373,7 +374,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _isLoading
                     ? null
@@ -398,7 +399,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0453CD),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   elevation: 2,
                 ),
@@ -555,47 +556,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
             ],
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                const Expanded(child: Divider(color: Color(0xFFC4C6CD))),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    _tr('OR CONTINUE WITH'),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF74777D).withValues(alpha: 1.0),
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ),
-                const Expanded(child: Divider(color: Color(0xFFC4C6CD))),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildBiometricButton(
-                    icon: Icons.fingerprint,
-                    label: _tr('Fingerprint'),
-                    onPressed: () => _handleBiometricLogin('Fingerprint'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildBiometricButton(
-                    icon: Icons.face,
-                    label: _tr('Face ID'),
-                    onPressed: () => _handleBiometricLogin('Face ID'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            const Divider(color: Color(0xFFC4C6CD)),
+            const SizedBox(height: 14),
+            const Divider(color: Color(0xFFC4C6CD), height: 1),
             const SizedBox(height: 12),
             InkWell(
               onTap: () {
@@ -606,7 +568,7 @@ class _LoginScreenState extends State<LoginScreen> {
               },
               borderRadius: BorderRadius.circular(10),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0453CD).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
@@ -615,7 +577,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.engineering, size: 20, color: Color(0xFF0453CD)),
+                    const Icon(Icons.engineering, size: 18, color: Color(0xFF0453CD)),
                     const SizedBox(width: 8),
                     Text(
                       _tr('Labour / Worker Login Portal →'),
@@ -692,35 +654,10 @@ class _LoginScreenState extends State<LoginScreen> {
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: colors.primary, width: 2),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildBiometricButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-  }) {
-    final colors = AppTheme.of(context);
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        side: BorderSide(color: colors.border),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        foregroundColor: colors.textPrimary,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: colors.primary, size: 28),
-          const SizedBox(height: 8),
-          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textPrimary)),
-        ],
-      ),
     );
   }
 
@@ -741,23 +678,14 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 24),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: colors.border)),
-          ),
-          padding: const EdgeInsets.only(top: 16),
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 24,
-            runSpacing: 8,
-            children: [
-              _buildFooterLink(_tr('Privacy Policy'), _showPrivacyPolicyDialog),
-              _buildFooterLink(_tr('Terms of Service'), _showTermsDialog),
-              _buildFooterLink(_tr('Help Center'), () {}),
-            ],
-          ),
+        const SizedBox(height: 10),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 20,
+          children: [
+            _buildFooterLink(_tr('Privacy Policy'), _showPrivacyPolicyDialog),
+            _buildFooterLink(_tr('Terms of Service'), _showTermsDialog),
+          ],
         ),
       ],
     );
@@ -907,92 +835,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _handleBiometricLogin(String method) async {
-    final isSupported = await BiometricService.isDeviceSupported();
-    if (!mounted) return;
-    if (!isSupported) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_tr('Biometric hardware is not available on this device')),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
 
-    final isAvailable = await BiometricService.isBiometricsAvailable();
-    if (!mounted) return;
-    if (!isAvailable) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_tr('No biometrics enrolled. Please set up fingerprint or face recognition in device settings.')),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    await SessionManager.init();
-    if (!mounted) return;
-    if (!SessionManager.isLoggedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_tr('Please log in with email or password first to enable biometric unlock.')),
-          backgroundColor: const Color(0xFF0453CD),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    final isEnabled = await BiometricService.isBiometricEnabled();
-    if (!mounted) return;
-    if (!isEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_tr('Biometric unlock is disabled. Log in with your password to enable it in Settings.')),
-          backgroundColor: const Color(0xFF0453CD),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    final authRes = await BiometricService.authenticate(
-      localizedReason: '${_tr('Authenticate with')} $method ${_tr('to unlock SpendHike')}',
-    );
-
-    if (!mounted) return;
-
-    if (authRes.success) {
-      final sessionValid = await ApiService.initSession();
-      if (!mounted) return;
-      if (!sessionValid) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_tr('Session expired. Please log in with your password.')),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        return;
-      }
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainNavigation()),
-      );
-    } else if (!authRes.isCancelled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_tr(authRes.errorMessage ?? 'Biometric authentication failed')),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
 
   void _showPrivacyPolicyDialog() {
     _showPolicyDialog(
