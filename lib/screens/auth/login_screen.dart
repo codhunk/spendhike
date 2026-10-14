@@ -3,9 +3,7 @@ import '../../config/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/app_settings.dart';
 import '../../services/passcode_service.dart';
-import '../../widgets/language_switcher.dart';
 import '../../widgets/spend_hike_logo.dart';
-import '../../widgets/theme_switcher.dart';
 import 'create_passcode_screen.dart';
 import 'labour_login_screen.dart';
 
@@ -80,18 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 flex: isDesktop ? 2 : 1,
                 child: Stack(
                   children: [
-                    const Positioned(
-                      top: 16,
-                      right: 16,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ThemeSwitcherButton(),
-                          SizedBox(width: 8),
-                          LanguageSwitcherButton(),
-                        ],
-                      ),
-                    ),
+                    // Background glow circles
                   Positioned(
                     top: -100,
                     left: -100,
@@ -678,14 +665,17 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 20,
-          children: [
-            _buildFooterLink(_tr('Privacy Policy'), _showPrivacyPolicyDialog),
-            _buildFooterLink(_tr('Terms of Service'), _showTermsDialog),
-          ],
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 20,
+            children: [
+              _buildFooterLink(_tr('Privacy Policy'), _showPrivacyPolicyDialog),
+              _buildFooterLink(_tr('Terms of Service'), _showTermsDialog),
+            ],
+          ),
         ),
       ],
     );

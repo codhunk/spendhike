@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import '../../config/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/app_settings.dart';
-import '../../widgets/language_switcher.dart';
 import '../../widgets/spend_hike_logo.dart';
-import '../../widgets/theme_switcher.dart';
 import 'create_passcode_screen.dart';
 
 
@@ -48,18 +46,6 @@ class _SignupScreenState extends State<SignupScreen> {
           backgroundColor: colors.background,
           body: Stack(
             children: [
-              const Positioned(
-                top: 16,
-                right: 16,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ThemeSwitcherButton(),
-                    SizedBox(width: 8),
-                    LanguageSwitcherButton(),
-                  ],
-                ),
-              ),
               // Visual Polish: Corner Decoration (Desktop only)
             if (isDesktop) ...[
               Positioned(
@@ -428,26 +414,67 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Widget _buildFooter() {
     final colors = AppTheme.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        Text(
-          _tr("Already have an account? "),
-          style: TextStyle(color: colors.textSecondary),
-        ),
-        GestureDetector(
-          onTap: () {
-            Navigator.pushReplacementNamed(context, '/login');
-          },
-          child: Text(
-            _tr('Login'),
-            style: TextStyle(
-              color: colors.primary,
-              fontWeight: FontWeight.bold,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _tr("Already have an account? "),
+              style: TextStyle(color: colors.textSecondary),
             ),
+            GestureDetector(
+              onTap: () {
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+              child: Text(
+                _tr('Login'),
+                style: TextStyle(
+                  color: colors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 20,
+            children: [
+              _buildFooterLink(_tr('Privacy Policy'), () => _showPolicyDialog(
+                title: 'Privacy Policy',
+                icon: Icons.privacy_tip_outlined,
+                content: 'SpendHike is committed to protecting your privacy. We collect personal information such as name, email, mobile number, and financial transaction data. All data is encrypted using AES-256. We never sell your personal data to third parties.\n\nContact: privacy@spendhike.com',
+              )),
+              _buildFooterLink(_tr('Terms & Conditions'), () => _showPolicyDialog(
+                title: 'Terms & Conditions',
+                icon: Icons.gavel_outlined,
+                content: 'By using SpendHike, you agree to our terms of service. SpendHike provides financial tracking tools and is not a licensed financial advisor. You are responsible for maintaining the confidentiality of your account credentials. These terms are governed by the laws of India.\n\nContact: legal@spendhike.com',
+              )),
+            ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFooterLink(String text, VoidCallback onTap) {
+    final colors = AppTheme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: colors.primary,
+          decoration: TextDecoration.underline,
+          decorationColor: colors.primary,
+        ),
+      ),
     );
   }
 
