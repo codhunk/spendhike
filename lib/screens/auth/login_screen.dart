@@ -198,74 +198,85 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _errorMessage;
 
   Widget _buildLoginForm() {
+    final colors = AppTheme.of(context);
     return AuthIllusionCard(
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Mode Selector Tabs
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => setState(() {
-                      _isMobileAuthMode = false;
-                      _errorMessage = null;
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: !_isMobileAuthMode ? const Color(0xFF0453CD) : Colors.transparent,
-                            width: 3,
-                          ),
+            // Modern Segmented Pill Switcher
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colors.isDark ? const Color(0xFF0B1020) : colors.surfaceSubtle,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() {
+                        _isMobileAuthMode = false;
+                        _errorMessage = null;
+                      }),
+                      borderRadius: BorderRadius.circular(9),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: !_isMobileAuthMode ? colors.primary : Colors.transparent,
+                          borderRadius: BorderRadius.circular(9),
+                          boxShadow: !_isMobileAuthMode
+                              ? [BoxShadow(color: colors.primary.withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 2))]
+                              : null,
                         ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          _tr('Email & Password'),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                            color: !_isMobileAuthMode ? const Color(0xFF0453CD) : const Color(0xFF74777F),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => setState(() {
-                      _isMobileAuthMode = true;
-                      _errorMessage = null;
-                    }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: _isMobileAuthMode ? const Color(0xFF0453CD) : Colors.transparent,
-                            width: 3,
-                          ),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          _tr('Mobile & OTP'),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                            color: _isMobileAuthMode ? const Color(0xFF0453CD) : const Color(0xFF74777F),
+                        child: Center(
+                          child: Text(
+                            _tr('Email & Password'),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: !_isMobileAuthMode ? Colors.white : colors.textSecondary,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() {
+                        _isMobileAuthMode = true;
+                        _errorMessage = null;
+                      }),
+                      borderRadius: BorderRadius.circular(9),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _isMobileAuthMode ? colors.primary : Colors.transparent,
+                          borderRadius: BorderRadius.circular(9),
+                          boxShadow: _isMobileAuthMode
+                              ? [BoxShadow(color: colors.primary.withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 2))]
+                              : null,
+                        ),
+                        child: Center(
+                          child: Text(
+                            _tr('Mobile & OTP'),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: _isMobileAuthMode ? Colors.white : colors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 14),
             if (_errorMessage != null) ...[
