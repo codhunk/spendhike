@@ -3,6 +3,7 @@ import '../../config/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/app_settings.dart';
 import '../../services/passcode_service.dart';
+import '../../widgets/auth_illusion_container.dart';
 import '../../widgets/spend_hike_logo.dart';
 import 'create_passcode_screen.dart';
 import 'labour_login_screen.dart';
@@ -76,34 +77,8 @@ class _LoginScreenState extends State<LoginScreen> {
               // Left side: Login Form
               Expanded(
                 flex: isDesktop ? 2 : 1,
-                child: Stack(
-                  children: [
-                    // Background glow circles
-                  Positioned(
-                    top: -100,
-                    left: -100,
-                    child: Container(
-                      width: 400,
-                      height: 400,
-                      decoration: BoxDecoration(
-                        color: colors.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: size.height / 2 - 150,
-                    right: -100,
-                    child: Container(
-                      width: 300,
-                      height: 300,
-                      decoration: BoxDecoration(
-                        color: colors.primary.withValues(alpha: 0.05),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                  Center(
+                child: AuthIllusionBackground(
+                  child: Center(
                     child: ScrollConfiguration(
                       behavior: const ScrollBehavior().copyWith(scrollbars: false),
                       child: SingleChildScrollView(
@@ -125,9 +100,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
 
             // Right side: Visual (Desktop only)
             if (isDesktop)
@@ -224,17 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _errorMessage;
 
   Widget _buildLoginForm() {
-    final colors = AppTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10)),
-        ],
-      ),
+    return AuthIllusionCard(
       child: Form(
         key: _formKey,
         child: Column(

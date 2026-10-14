@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../config/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/app_settings.dart';
+import '../../widgets/auth_illusion_container.dart';
 import '../../widgets/spend_hike_logo.dart';
 import 'create_passcode_screen.dart';
 
@@ -35,58 +36,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isDesktop = size.width > 900;
-
     return ListenableBuilder(
       listenable: AppSettings.instance,
       builder: (context, _) {
         final colors = AppTheme.of(context);
         return Scaffold(
           backgroundColor: colors.background,
-          body: Stack(
-            children: [
-              // Visual Polish: Corner Decoration (Desktop only)
-            if (isDesktop) ...[
-              Positioned(
-                top: 32,
-                right: 32,
-                child: Opacity(
-                  opacity: 0.15,
-                  child: Container(
-                    width: 256,
-                    height: 256,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: colors.primary, width: 4),
-                        right: BorderSide(color: colors.primary, width: 4),
-                      ),
-                      borderRadius: const BorderRadius.only(topRight: Radius.circular(24)),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 32,
-                left: 32,
-                child: Opacity(
-                  opacity: 0.15,
-                  child: Container(
-                    width: 256,
-                    height: 256,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: colors.border, width: 4),
-                        left: BorderSide(color: colors.border, width: 4),
-                      ),
-                      borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(24)),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            
-            Center(
+          body: AuthIllusionBackground(
+            child: Center(
               child: ScrollConfiguration(
                 behavior: const ScrollBehavior().copyWith(scrollbars: false),
                 child: SingleChildScrollView(
@@ -108,9 +65,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
             ),
-          ],
-        ),
-      );
+          ),
+        );
     },
     );
   }
@@ -146,20 +102,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Widget _buildSignupForm() {
     final colors = AppTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return AuthIllusionCard(
       child: Form(
         key: _formKey,
         child: Column(
