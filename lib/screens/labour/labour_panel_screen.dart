@@ -944,7 +944,7 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
           if (_recentAttendance.isEmpty)
             Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(_tr('No attendance recorded yet.'))))
           else
-            ..._recentAttendance.map((rec) => _buildAttendanceItem(rec, colors)),
+            ..._recentAttendance.take(50).map((rec) => _buildAttendanceItem(rec, colors)),
         ],
       ),
     );
@@ -1029,7 +1029,7 @@ class _LabourPanelScreenState extends State<LabourPanelScreen> {
             else if (_paymentsList.isEmpty)
               Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(_tr('No payment records logged yet.'))))
             else
-              ..._paymentsList.map((p) => _buildPaymentItem(p, colors)),
+              ..._paymentsList.take(50).map((p) => _buildPaymentItem(p, colors)),
           ],
         ),
       ),
